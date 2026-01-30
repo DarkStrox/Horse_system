@@ -1,0 +1,25 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+E:\Graduation Project\ArabianHorseSystem\Program.cs(137,9): error CS1524: Expected catch or finally [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(139,5): error CS1022: Type or namespace definition, or end-of-file expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(139,22): error CS1026: ) expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(139,22): error CS1002: ; expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(139,24): error CS1001: Identifier expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(139,24): error CS1003: Syntax error, ',' expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(146,5): error CS1022: Type or namespace definition, or end-of-file expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(147,1): error CS1022: Type or namespace definition, or end-of-file expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+
+Build FAILED.
+
+E:\Graduation Project\ArabianHorseSystem\Program.cs(137,9): error CS1524: Expected catch or finally [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(139,5): error CS1022: Type or namespace definition, or end-of-file expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(139,22): error CS1026: ) expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(139,22): error CS1002: ; expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(139,24): error CS1001: Identifier expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(139,24): error CS1003: Syntax error, ',' expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(146,5): error CS1022: Type or namespace definition, or end-of-file expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+E:\Graduation Project\ArabianHorseSystem\Program.cs(147,1): error CS1022: Type or namespace definition, or end-of-file expected [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
+    0 Warning(s)
+    8 Error(s)
+
+Time Elapsed 00:00:00.91

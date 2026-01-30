@@ -1,0 +1,20 @@
+[
+  {
+    "Id": "e05ec341-ebf3-420f-bc73-400cae0ce96f",
+    "Type": "JoinRequest",
+    "SenderId": null,
+    "Request": {
+      "FullName": "\u064A\u0648\u0633\u0641",
+      "Email": "normaluser@gmail.com",
+      "PhoneNumber": "01034032",
+      "Role": "Seller",
+      "Motivation": "yes",
+      "NationalId": "059694976859",
+      "LicenseNumber": "",
+      "ExperienceYears": null
+    },
+    "HorseRequest": null,
+    "CreatedAt": "2026-01-16T20:10:34.9851612Z",
+    "IsRead": false
+  }
+]
