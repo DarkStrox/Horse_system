@@ -1,8 +1,0 @@
-E:\Graduation Project\ArabianHorseSystem\Controllers\AuctionController.cs(58,21): error CS0833: An anonymous type cannot have multiple properties with the same name [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
-E:\Graduation Project\ArabianHorseSystem\Controllers\AuctionController.cs(92,17): error CS0833: An anonymous type cannot have multiple properties with the same name [E:\Graduation Project\ArabianHorseSystem\ArabianHorseSystem.csproj]
-
-Build FAILED.
-    38 Warning(s)
-    2 Error(s)
-
-Time Elapsed 00:00:01.41
