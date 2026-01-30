@@ -31,4 +31,9 @@ yarn-error.log*
 .agent/
 
 # Uploads (Optional: usually verify if these should be committed. For a demo, maybe yes, but usually no for production)
+# Uploads (Optional: usually verify if these should be committed. For a demo, maybe yes, but usually no for production)
 # /ArabianHorseSystem/wwwroot/uploads
+
+# Secrets
+secrets.json
+.env

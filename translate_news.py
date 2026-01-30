@@ -5,9 +5,17 @@ def translate_to_arabic(text):
     if not text:
         return ""
 
+    try:
+        with open('secrets.json', 'r') as f:
+            secrets = json.load(f)
+            api_key = secrets.get('OPENROUTER_API_KEY', "")
+    except Exception as e:
+        print(f"Error loading secrets.json: {e}")
+        return ""
+
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
-        "Authorization": "Bearer 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",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
     
