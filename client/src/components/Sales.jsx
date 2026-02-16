@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
@@ -14,6 +14,8 @@ const Sales = () => {
         if (savedTheme) return savedTheme === 'dark';
         return window.matchMedia('(prefers-color-scheme: dark)').matches;
     });
+    const location = useLocation();
+
     // Placeholder for real data fetch later
     const [horses, setHorses] = useState([
         { id: 104, name: 'وردة الصحراء', type: 'فرس', age: '6 سنوات', breed: 'صقلاوي جدراني', father: 'مروان الشقب', price: '240,000 ج.م', img: '/auctions/card-1.png', category: 'أفراس' },
@@ -30,7 +32,12 @@ const Sales = () => {
                 headers: { Authorization: `Bearer ${token}` }
             })
                 .then(res => setUser(res.data))
-                .catch(err => console.error("Error fetching user:", err));
+                .catch(err => {
+                    console.error("Error fetching user:", err);
+                    setUser(null);
+                });
+        } else {
+            setUser(null);
         }
 
         // Fetch Real Horses
@@ -49,7 +56,7 @@ const Sales = () => {
                 console.error("Error fetching horses:", err);
                 setLoading(false);
             });
-    }, []);
+    }, [location.pathname]);
 
     useEffect(() => {
         if (isDarkMode) {
@@ -93,10 +100,16 @@ const Sales = () => {
                         </div>
                         <div className="flex items-center gap-4">
                             {(user?.role === 'Seller' || user?.role === 'Admin') && (
-                                <Link to="/add-horse" className="bg-[#76E05B] text-white px-10 py-4 rounded-2xl font-black text-lg shadow-xl shadow-green-100 dark:shadow-green-900/10 hover:bg-green-500 transition flex items-center space-x-reverse space-x-3">
-                                    <i className="fas fa-plus-circle"></i>
-                                    <span>أضف خيل للبيع</span>
-                                </Link>
+                                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                                    <Link to="/list-for-sale" className="bg-[#76E05B] text-white px-10 py-4 rounded-2xl font-black text-lg shadow-xl shadow-green-100 dark:shadow-green-900/10 hover:bg-green-500 transition flex items-center space-x-reverse space-x-3 justify-center">
+                                        <i className="fas fa-plus-circle"></i>
+                                        <span>أضف خيل للبيع</span>
+                                    </Link>
+                                    <Link to="/add-horse" className="border border-green-500 text-green-500 px-8 py-4 rounded-2xl font-bold hover:bg-green-50 transition flex items-center space-x-reverse space-x-3 justify-center">
+                                        <i className="fas fa-database"></i>
+                                        <span>إضافة خيل للنظام</span>
+                                    </Link>
+                                </div>
                             )}
                             <button onClick={() => document.getElementById('sales-grid').scrollIntoView({ behavior: 'smooth' })} className="border border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 px-8 py-4 rounded-2xl font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                                 تصفح المعروض

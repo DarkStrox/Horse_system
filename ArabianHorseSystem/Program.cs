@@ -15,6 +15,18 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
+
+// Increase request size limits (global)
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 52428800; // 50MB
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.ValueLengthLimit = 52428800; // 50MB
+    options.MultipartBodyLengthLimit = 52428800; // 50MB
+});
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddTransient<NotificationService>();
 builder.Services.AddHttpClient();
@@ -116,9 +128,14 @@ using (var scope = app.Services.CreateScope())
             if (!await userManager.IsInRoleAsync(user, "Admin"))
             {
                 await userManager.AddToRoleAsync(user, "Admin");
+                Console.WriteLine($"Assigned 'Admin' identity role to {adminEmail}");
+            }
+
+            if (user.Role != "Admin")
+            {
                 user.Role = "Admin";
                 await userManager.UpdateAsync(user);
-                Console.WriteLine($"Assigned 'Admin' role to {adminEmail}");
+                Console.WriteLine($"Updated 'Role' property to 'Admin' for {adminEmail}");
             }
 
             // Force reset password for main admin

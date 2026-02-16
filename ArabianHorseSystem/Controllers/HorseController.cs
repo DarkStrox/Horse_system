@@ -50,10 +50,145 @@ namespace ArabianHorseSystem.Controllers
             return Ok(horses);
         }
 
-        // POST: api/horse/sell
-        // POST: api/horse/sell
+        // POST: api/horse
+        [HttpPost]
+        [Authorize(Roles = "Seller,Admin")]
+        public async Task<IActionResult> RegisterHorse([FromForm] HorseRegistrationRequest model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            if (user == null) return Unauthorized();
+
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+
+            // Handle Image Upload
+            string? imageUrl = null;
+            if (model.ImageFile != null && model.ImageFile.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "horses");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.ImageFile.FileName;
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.ImageFile.CopyToAsync(stream);
+                }
+                imageUrl = "/uploads/horses/" + uniqueFileName;
+            }
+            else
+            {
+                imageUrl = model.ImageUrl;
+            }
+
+            // Handle Video Upload
+            string? videoUrl = null;
+            if (model.VideoFile != null && model.VideoFile.Length > 0)
+            {
+                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "horses");
+                 if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                 
+                 var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.VideoFile.FileName;
+                 var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                 
+                 using (var stream = new FileStream(filePath, FileMode.Create))
+                 {
+                     await model.VideoFile.CopyToAsync(stream);
+                 }
+                 videoUrl = "/uploads/horses/" + uniqueFileName;
+            }
+            else
+            {
+                videoUrl = model.VideoUrl;
+            }
+
+            // Check if horse with MicrochipId already exists
+            if (await _context.HorseProfiles.AnyAsync(h => h.MicrochipId == model.MicrochipId))
+            {
+                return BadRequest(new { message = "Horse with this Microchip ID already exists." });
+            }
+
+            var owner = await _context.Owners.FirstOrDefaultAsync(o => o.OwnerId == user.Id);
+            if (owner == null)
+            {
+                owner = new Owner { OwnerId = user.Id };
+                _context.Owners.Add(owner);
+                await _context.SaveChangesAsync();
+            }
+
+            var horse = new HorseProfile
+            {
+                MicrochipId = model.MicrochipId,
+                Name = model.Name,
+                Age = model.Age,
+                Gender = model.Gender,
+                Breed = model.Breed,
+                IsForSale = false, // Just registering to system
+                IsApproved = true,  // System registration is auto-approved
+                HealthStatus = model.HealthStatus,
+                Vaccinated = model.Vaccinated,
+                RacingHistory = model.HasRacingHistory ? model.RacingHistoryDetails : "None",
+                ImageUrl = imageUrl,
+                VideoUrl = videoUrl,
+                OwnerId = owner.OwnerId
+            };
+
+            _context.HorseProfiles.Add(horse);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Horse registered in system successfully.", horseId = horse.MicrochipId });
+        }
+
+        // PUT: api/horse/list-for-sale
+        [HttpPut("list-for-sale")]
+        [Authorize(Roles = "Seller,Admin")]
+        public async Task<IActionResult> ListHorseForSale([FromBody] HorseListingRequest model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            if (user == null) return Unauthorized();
+
+            var horse = await _context.HorseProfiles.FirstOrDefaultAsync(h => h.MicrochipId == model.MicrochipId);
+            if (horse == null) return NotFound(new { message = "Horse not found." });
+
+            // Ensure owner or admin
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            if (!isAdmin && horse.OwnerId != user.Id)
+            {
+                return Forbid();
+            }
+
+            horse.Price = model.Price;
+            horse.ClaimLocation = model.ClaimLocation;
+            horse.IsForSale = true;
+            horse.IsApproved = isAdmin; // Auto-approve if Admin
+
+            await _context.SaveChangesAsync();
+
+            if (!isAdmin)
+            {
+                // Create notification for admin approval
+                var saleRequest = new HorseSaleRequest
+                {
+                    MicrochipId = horse.MicrochipId,
+                    Name = horse.Name,
+                    Price = model.Price,
+                    ClaimLocation = model.ClaimLocation
+                };
+                await _notificationService.AddHorseSaleNotificationAsync(saleRequest, user.Id.ToString());
+                return Ok(new { message = "Sale request sent to Admin for approval." });
+            }
+
+            return Ok(new { message = "Horse listed for sale successfully." });
+        }
+
         [HttpPost("sell")]
-        [Authorize(Roles = "Seller,Admin")] 
+        [Authorize(Roles = "Seller,Admin")]
         public async Task<IActionResult> PostHorseForSale([FromForm] HorseSaleRequest model)
         {
             if (!ModelState.IsValid)

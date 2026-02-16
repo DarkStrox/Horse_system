@@ -6,6 +6,7 @@ import Footer from './Footer';
 
 const AddHorse = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [loading, setLoading] = useState(false);
     const [user, setUser] = useState(null);
     const [formData, setFormData] = useState({
@@ -14,13 +15,10 @@ const AddHorse = () => {
         gender: 'Male',
         breed: '',
         age: '',
-        price: '',
         healthStatus: '',
         vaccinated: false,
         hasRacingHistory: false,
         racingHistoryDetails: '',
-        claimLocation: '',
-        claimLocation: '',
         imageFile: null,
         videoFile: null
     });
@@ -47,7 +45,7 @@ const AddHorse = () => {
                 console.error(err);
                 navigate('/login');
             });
-    }, [navigate]);
+    }, [navigate, location.pathname]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -72,7 +70,7 @@ const AddHorse = () => {
         setLoading(true);
 
         // Basic validation
-        if (!formData.name || !formData.price || !formData.claimLocation || !formData.microchipId) {
+        if (!formData.name || !formData.microchipId) {
             alert("يرجى ملء الحقول المطلوبة (بما في ذلك رقم التسجيل).");
             setLoading(false);
             return;
@@ -84,28 +82,23 @@ const AddHorse = () => {
         data.append('gender', formData.gender);
         data.append('breed', formData.breed);
         data.append('age', parseInt(formData.age) || 0);
-        data.append('price', parseFloat(formData.price) || 0);
         data.append('healthStatus', formData.healthStatus);
         data.append('vaccinated', formData.vaccinated);
         data.append('hasRacingHistory', formData.hasRacingHistory);
         if (formData.racingHistoryDetails) data.append('racingHistoryDetails', formData.racingHistoryDetails);
-        data.append('claimLocation', formData.claimLocation);
 
         if (formData.imageFile) data.append('imageFile', formData.imageFile);
         if (formData.videoFile) data.append('videoFile', formData.videoFile);
 
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/horse/sell', data, {
+            await axios.post('http://localhost:5000/api/horse', data, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            const successMsg = user?.role === 'Admin'
-                ? "تم إضافة الخيل بنجاح وظهوره في السوق فوراً."
-                : "تم إرسال طلب البيع بنجاح! سيظهر الخيل في السوق بعد مراجعة الإدارة وموافقتها.";
-            alert(successMsg);
+            alert("تم إضافة الخيل إلى النظام بنجاح.");
             navigate('/sales');
         } catch (err) {
             console.error(err);
@@ -121,8 +114,8 @@ const AddHorse = () => {
 
             <div className="container mx-auto px-4 py-12 flex justify-center">
                 <div className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-xl p-8 md:p-12 border border-gray-100 dark:border-gray-800">
-                    <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">عرض خيل للبيع</h2>
-                    <p className="text-gray-400 mb-8">أدخل تفاصيل الخيل بدقة ليتم عرضها للمشترين.</p>
+                    <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">إضافة خيل للنظام</h2>
+                    <p className="text-gray-400 mb-8">أدخل تفاصيل الخيل لتسجيلها في قاعدتنا البيانية.</p>
 
                     <form onSubmit={handleSubmit} className="space-y-6" encType="multipart/form-data">
                         {/* Microchip ID */}
@@ -193,33 +186,7 @@ const AddHorse = () => {
                             </div>
                         </div>
 
-                        {/* Price & Location */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">السعر المطلوب (ج.م) *</label>
-                                <input
-                                    type="number"
-                                    name="price"
-                                    value={formData.price}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition"
-                                    placeholder="مثال: 150000"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">موقع الاستلام *</label>
-                                <input
-                                    type="text"
-                                    name="claimLocation"
-                                    value={formData.claimLocation}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition"
-                                    placeholder="مدينة، اسطبل..."
-                                    required
-                                />
-                            </div>
-                        </div>
+                        {/* General Info placeholder */}
 
                         {/* Media Uploads - Images & Video */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -305,7 +272,7 @@ const AddHorse = () => {
                             disabled={loading}
                             className="w-full bg-[#76E05B] text-white font-black py-4 rounded-2xl text-lg hover:bg-green-600 transition shadow-xl shadow-green-100 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'جاري الإرسال...' : 'إرسال طلب البيع'}
+                            {loading ? 'جاري الإرسال...' : 'إضافة للطلبات النظام'}
                         </button>
                     </form>
                 </div>

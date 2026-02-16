@@ -11,7 +11,7 @@ def translate_to_arabic(text):
             api_key = secrets.get('OPENROUTER_API_KEY', "")
     except Exception as e:
         print(f"Error loading secrets.json: {e}")
-        return ""
+        return text
 
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
@@ -19,12 +19,14 @@ def translate_to_arabic(text):
         "Content-Type": "application/json"
     }
     
+    # Using a popular free model. NOTE: OpenRouter often requires a non-zero balance
+    # to access free models to prevent abuse. Error 402 means you need to top up.
     payload = {
-        "model": "xiaomi/mimo-v2-flash:free",
+        "model": "google/gemini-2.0-flash-exp:free",
         "messages": [
             {
                 "role": "system",
-                "content": "You are a professional translator. Translate the following text to Arabic. Be direct and output ONLY the translated text without any preamble or explanations."
+                "content": "You are a professional translator. Translate the following text to Arabic. Output ONLY the translated text."
             },
             {
                 "role": "user",
@@ -35,20 +37,22 @@ def translate_to_arabic(text):
 
     try:
         response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status() # Raise an exception for bad status codes
-        
+        if response.status_code == 402:
+            print("Error 402: OpenRouter requires a non-zero balance to use free models. Please top up your account.")
+            return text
+            
+        response.raise_for_status()
         result = response.json()
+        
         if 'choices' in result and len(result['choices']) > 0:
             return result['choices'][0]['message']['content'].strip()
-        else:
-            return text # Fallback to original text if no choice returned
+        return text
             
     except Exception as e:
-        print(f"Error converting to Arabic: {e}")
-        return text # Fallback
+        print(f"Translation error: {e}")
+        return text
 
 if __name__ == "__main__":
-    # Example usage
     sample_text = "The Arabian horse is a breed of horse that originated on the Arabian Peninsula."
     print("Original:", sample_text)
     translated = translate_to_arabic(sample_text)

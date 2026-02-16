@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ListHorseForSale from './components/ListHorseForSale';
 import ArabianHorseHome from './components/ArabianHorseHome';
 import Register from './components/Register';
 import Login from './components/Login';
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/contact" element={<ContactUs />} />
                 <Route path="/sales" element={<Sales />} />
                 <Route path="/add-horse" element={<AddHorse />} />
+                <Route path="/list-for-sale" element={<ListHorseForSale />} />
                 <Route path="/horses" element={<HorseList />} />
                 <Route path="/horse/:id" element={<HorseProfile />} />
                 <Route path="/news" element={<News />} />

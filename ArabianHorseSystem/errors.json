@@ -1,0 +1,975 @@
+{
+  "$schema": "http://json.schemastore.org/sarif-1.0.0",
+  "version": "1.0.0",
+  "runs": [
+    {
+      "tool": {
+        "name": "Microsoft (R) Visual C# Compiler",
+        "version": "5.0.0.0",
+        "fileVersion": "5.0.0-2.25569.105 (fad253f5)",
+        "semanticVersion": "5.0.0",
+        "language": "en-US"
+      },
+      "results": [
+        {
+          "ruleId": "CS1519",
+          "level": "error",
+          "message": "Invalid token 'if' in a member declaration",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 194,
+                  "startColumn": 13,
+                  "endLine": 194,
+                  "endColumn": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS8124",
+          "level": "error",
+          "message": "Tuple must contain at least two elements.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 194,
+                  "startColumn": 22,
+                  "endLine": 194,
+                  "endColumn": 24
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1026",
+          "level": "error",
+          "message": ") expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 194,
+                  "startColumn": 22,
+                  "endLine": 194,
+                  "endColumn": 24
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1519",
+          "level": "error",
+          "message": "Invalid token '==' in a member declaration",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 194,
+                  "startColumn": 22,
+                  "endLine": 194,
+                  "endColumn": 24
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1519",
+          "level": "error",
+          "message": "Invalid token 'if' in a member declaration",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 200,
+                  "startColumn": 13,
+                  "endLine": 200,
+                  "endColumn": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS8124",
+          "level": "error",
+          "message": "Tuple must contain at least two elements.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 200,
+                  "startColumn": 33,
+                  "endLine": 200,
+                  "endColumn": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1026",
+          "level": "error",
+          "message": ") expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 200,
+                  "startColumn": 33,
+                  "endLine": 200,
+                  "endColumn": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1519",
+          "level": "error",
+          "message": "Invalid token '!=' in a member declaration",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 200,
+                  "startColumn": 33,
+                  "endLine": 200,
+                  "endColumn": 35
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1519",
+          "level": "error",
+          "message": "Invalid token '>' in a member declaration",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 200,
+                  "startColumn": 67,
+                  "endLine": 200,
+                  "endColumn": 68
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1519",
+          "level": "error",
+          "message": "Invalid token 'if' in a member declaration",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 203,
+                  "startColumn": 17,
+                  "endLine": 203,
+                  "endColumn": 19
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1031",
+          "level": "error",
+          "message": "Type expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 203,
+                  "startColumn": 21,
+                  "endLine": 203,
+                  "endColumn": 22
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS8124",
+          "level": "error",
+          "message": "Tuple must contain at least two elements.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 203,
+                  "startColumn": 21,
+                  "endLine": 203,
+                  "endColumn": 22
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1026",
+          "level": "error",
+          "message": ") expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 203,
+                  "startColumn": 21,
+                  "endLine": 203,
+                  "endColumn": 22
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1519",
+          "level": "error",
+          "message": "Invalid token '!' in a member declaration",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 203,
+                  "startColumn": 21,
+                  "endLine": 203,
+                  "endColumn": 22
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1519",
+          "level": "error",
+          "message": "Invalid token '(' in a member declaration",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 203,
+                  "startColumn": 38,
+                  "endLine": 203,
+                  "endColumn": 39
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS8124",
+          "level": "error",
+          "message": "Tuple must contain at least two elements.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 203,
+                  "startColumn": 52,
+                  "endLine": 203,
+                  "endColumn": 53
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1519",
+          "level": "error",
+          "message": "Invalid token ')' in a member declaration",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 203,
+                  "startColumn": 53,
+                  "endLine": 203,
+                  "endColumn": 54
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1519",
+          "level": "error",
+          "message": "Invalid token '(' in a member declaration",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 203,
+                  "startColumn": 80,
+                  "endLine": 203,
+                  "endColumn": 81
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS8124",
+          "level": "error",
+          "message": "Tuple must contain at least two elements.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 203,
+                  "startColumn": 94,
+                  "endLine": 203,
+                  "endColumn": 95
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1519",
+          "level": "error",
+          "message": "Invalid token ';' in a member declaration",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 203,
+                  "startColumn": 95,
+                  "endLine": 203,
+                  "endColumn": 96
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1513",
+          "level": "error",
+          "message": "} expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 206,
+                  "startColumn": 76,
+                  "endLine": 206,
+                  "endColumn": 76
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1002",
+          "level": "error",
+          "message": "; expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 208,
+                  "startColumn": 23,
+                  "endLine": 208,
+                  "endColumn": 24
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS8124",
+          "level": "error",
+          "message": "Tuple must contain at least two elements.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 208,
+                  "startColumn": 35,
+                  "endLine": 208,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1026",
+          "level": "error",
+          "message": ") expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 208,
+                  "startColumn": 35,
+                  "endLine": 208,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1022",
+          "level": "error",
+          "message": "Type or namespace definition, or end-of-file expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 208,
+                  "startColumn": 35,
+                  "endLine": 208,
+                  "endColumn": 36
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1001",
+          "level": "error",
+          "message": "Identifier expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 208,
+                  "startColumn": 60,
+                  "endLine": 208,
+                  "endColumn": 61
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1001",
+          "level": "error",
+          "message": "Identifier expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 208,
+                  "startColumn": 77,
+                  "endLine": 208,
+                  "endColumn": 78
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1002",
+          "level": "error",
+          "message": "; expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 208,
+                  "startColumn": 78,
+                  "endLine": 208,
+                  "endColumn": 79
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1022",
+          "level": "error",
+          "message": "Type or namespace definition, or end-of-file expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 208,
+                  "startColumn": 78,
+                  "endLine": 208,
+                  "endColumn": 79
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1001",
+          "level": "error",
+          "message": "Identifier expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 210,
+                  "startColumn": 61,
+                  "endLine": 210,
+                  "endColumn": 62
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS8803",
+          "level": "error",
+          "message": "Top-level statements must precede namespace and type declarations.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 212,
+                  "startColumn": 17,
+                  "endLine": 212,
+                  "endColumn": 64
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1022",
+          "level": "error",
+          "message": "Type or namespace definition, or end-of-file expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 213,
+                  "startColumn": 13,
+                  "endLine": 213,
+                  "endColumn": 14
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS8641",
+          "level": "error",
+          "message": "'else' cannot start a statement.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 213,
+                  "startColumn": 14,
+                  "endLine": 213,
+                  "endColumn": 14
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1003",
+          "level": "error",
+          "message": "Syntax error, '(' expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 213,
+                  "startColumn": 14,
+                  "endLine": 213,
+                  "endColumn": 14
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1525",
+          "level": "error",
+          "message": "Invalid expression term 'else'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 213,
+                  "startColumn": 14,
+                  "endLine": 213,
+                  "endColumn": 14
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1026",
+          "level": "error",
+          "message": ") expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 213,
+                  "startColumn": 14,
+                  "endLine": 213,
+                  "endColumn": 14
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1002",
+          "level": "error",
+          "message": "; expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 213,
+                  "startColumn": 14,
+                  "endLine": 213,
+                  "endColumn": 14
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1022",
+          "level": "error",
+          "message": "Type or namespace definition, or end-of-file expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 283,
+                  "startColumn": 9,
+                  "endLine": 283,
+                  "endColumn": 10
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS0106",
+          "level": "error",
+          "message": "The modifier 'public' is not valid for this item",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 288,
+                  "startColumn": 9,
+                  "endLine": 288,
+                  "endColumn": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS0106",
+          "level": "error",
+          "message": "The modifier 'public' is not valid for this item",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 304,
+                  "startColumn": 9,
+                  "endLine": 304,
+                  "endColumn": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS0106",
+          "level": "error",
+          "message": "The modifier 'public' is not valid for this item",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 320,
+                  "startColumn": 9,
+                  "endLine": 320,
+                  "endColumn": 15
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1022",
+          "level": "error",
+          "message": "Type or namespace definition, or end-of-file expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 347,
+                  "startColumn": 5,
+                  "endLine": 347,
+                  "endColumn": 6
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS1022",
+          "level": "error",
+          "message": "Type or namespace definition, or end-of-file expected",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///E:/Graduation%20Project/ArabianHorseSystem/Controllers/HorseController.cs",
+                "region": {
+                  "startLine": 348,
+                  "startColumn": 1,
+                  "endLine": 348,
+                  "endColumn": 2
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "rules": {
+        "CS0106": {
+          "id": "CS0106",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS0106)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1001": {
+          "id": "CS1001",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1001)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1002": {
+          "id": "CS1002",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1002)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1003": {
+          "id": "CS1003",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1003)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1022": {
+          "id": "CS1022",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1022)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1026": {
+          "id": "CS1026",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1026)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1031": {
+          "id": "CS1031",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1031)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1513": {
+          "id": "CS1513",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1513)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1519": {
+          "id": "CS1519",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1519)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS1525": {
+          "id": "CS1525",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1525)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS8124": {
+          "id": "CS8124",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS8124)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS8641": {
+          "id": "CS8641",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS8641)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS8803": {
+          "id": "CS8803",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS8803)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
