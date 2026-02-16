@@ -50,7 +50,7 @@ const NewsDetails = () => {
                         <span className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-3 py-1 rounded-full font-bold text-xs uppercase tracking-wider">{article.sourceName || 'News'}</span>
                         <span>{new Date(article.publishedAt).toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                     </div>
-                    <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white leading-tight" dir="ltr">
+                    <h1 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white leading-tight">
                         {article.title}
                     </h1>
                     {article.author && <p className="text-gray-500 dark:text-gray-400 font-medium">بقلم: {article.author}</p>}
@@ -66,7 +66,7 @@ const NewsDetails = () => {
                 </div>
 
                 {/* Content */}
-                <div className="prose prose-lg dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-loose" dir="ltr">
+                <div className="prose prose-lg dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-loose">
                     <p className="text-xl font-medium mb-8 text-gray-800 dark:text-gray-100">{article.description}</p>
                     <div className="bg-gray-50 dark:bg-gray-900 p-8 rounded-3xl border border-gray-100 dark:border-gray-800 mb-8">
                         {/* Render HTML content if available (from SmartReader), otherwise text */}

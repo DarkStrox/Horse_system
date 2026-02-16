@@ -110,7 +110,7 @@ const NewsSearchModal = ({ isOpen, onClose, onNewsAdded }) => {
                                     className="w-24 h-24 rounded-xl object-cover bg-gray-200"
                                 />
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="line-clamp-2 font-bold text-gray-800 dark:text-gray-200 text-sm mb-2 text-left" dir="ltr">
+                                    <h3 className="line-clamp-2 font-bold text-gray-800 dark:text-gray-200 text-sm mb-2">
                                         {article.title}
                                     </h3>
                                     <p className="text-xs text-green-600 font-medium mb-1">{article.source.name}</p>

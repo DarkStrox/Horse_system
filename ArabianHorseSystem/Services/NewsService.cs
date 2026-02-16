@@ -92,34 +92,75 @@ namespace ArabianHorseSystem.Services
         {
             if (string.IsNullOrWhiteSpace(text)) return text;
             
-            if (text.Length > 20000) text = text.Substring(0, 20000);
+            // Limit text size for CLI passing
+            if (text.Length > 10000) text = text.Substring(0, 10000);
 
             try
             {
-                var requestBody = new
+                // Run translate_news.py via Python
+                // We pass the text via stdin to avoid shell escaping issues and length limits
+                var startInfo = new System.Diagnostics.ProcessStartInfo
                 {
-                    model = "xiaomi/mimo-v2-flash:free",
-                    messages = new[]
-                    {
-                        new { role = "system", content = "You are a professional translator. Translate the following text to Arabic. Be direct and output ONLY the translated text without any preamble." },
-                        new { role = "user", content = text }
-                    }
+                    FileName = @"C:\Users\super\anaconda3\python.exe", // Explicit path from environment check
+                    Arguments = "translate_news.py",
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    StandardInputEncoding = System.Text.Encoding.UTF8,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8,
+                    StandardErrorEncoding = System.Text.Encoding.UTF8
                 };
 
-                var request = new HttpRequestMessage(HttpMethod.Post, "https://openrouter.ai/api/v1/chat/completions");
-                request.Headers.Add("Authorization", $"Bearer {TranslatorApiKey}");
-                request.Content = JsonContent.Create(requestBody);
+                // Enforce UTF8 for Python output
+                startInfo.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
 
-                var response = await _httpClient.SendAsync(request);
-                response.EnsureSuccessStatusCode();
+                // Adjust WorkingDirectory if needed to find translate_news.py
+                // Finding root project dir relative to bin
+                string rootPath = AppDomain.CurrentDomain.BaseDirectory;
+                while (!System.IO.File.Exists(System.IO.Path.Combine(rootPath, "translate_news.py")) && 
+                       System.IO.Directory.GetParent(rootPath) != null)
+                {
+                    rootPath = System.IO.Directory.GetParent(rootPath).FullName;
+                }
+                startInfo.WorkingDirectory = rootPath;
 
-                var result = await response.Content.ReadFromJsonAsync<OpenRouterResponse>();
-                return result?.choices?.FirstOrDefault()?.message?.content?.Trim() ?? text;
+                using var process = System.Diagnostics.Process.Start(startInfo);
+                if (process == null) return text;
+
+                using (var sw = process.StandardInput)
+                {
+                    if (sw.BaseStream.CanWrite)
+                    {
+                        await sw.WriteAsync(text);
+                    }
+                }
+
+                string result = await process.StandardOutput.ReadToEndAsync();
+                string error = await process.StandardError.ReadToEndAsync();
+                await process.WaitForExitAsync();
+
+                if (process.ExitCode != 0)
+                {
+                    _logger.LogError("Python translation script failed with code {Code}: {Error}", process.ExitCode, error);
+                    return text;
+                }
+
+                // The script currently prints "Original: ..." and "Translated: ..." when run as main.
+                // We need to modify the script to just output the result or parse it.
+                // For now, let's look for the translated part.
+                if (result.Contains("Translated: "))
+                {
+                    return result.Split("Translated: ").Last().Trim();
+                }
+
+                return !string.IsNullOrWhiteSpace(result) ? result.Trim() : text;
             }
             catch (Exception ex)
             {
-                _logger.LogError("Translation failed: {Message}", ex.Message);
-                return text; // Fallback
+                _logger.LogError("Translation failed via Python process: {Message}", ex.Message);
+                return text;
             }
         }
     }
