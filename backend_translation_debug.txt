@@ -394,3 +394,76 @@ Result: من المتوقع أن تتضمن ثورة رايان رينولدز �
 Input: ﻿<div id="readability-page-1" class="page"><div id="article-body" data-testid="article-content-body"...
 Status: 200
 Result: <p>صعود وريكسهم من غموض الدوري غير الرسمي إلى السع...
+--- Translation Attempt ---
+Input: ﻿Two more Kentucky Derby preps, two more upsets in weekend horse racing...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿The crowded field of Kentucky Derby contenders grew apace in weekend horse racing, as two official ...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿<div id="readability-page-1" class="page"><p>1 of 2 | The Puma upsets Saturday's Tampa Bay Derby, j...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿River City Roundup...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿The best things to see and do in the days ahead...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿<div id="readability-page-1" class="page"><div id="maincontent" itemscope="" itemtype="http://schem...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿Harry's Horses...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿BBC Sport follows Harry Redknapp for an inside look at his passion for horse racing....
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿BBC Sport follows Harry Redknapp for an inside look at his passion for horse racing.
+ More...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿Denis Walsh: Is there still room for dreamers in the Cheltenham winners’ enclosure?...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿In a festival where the premier league of ownership dominates, fairytale endings can be few and far...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿<div id="readability-page-1" class="page"><article><p>After every race at <a href="https://www.iris...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿‘Footy, Fillies and Fans’: A weekend of top-level sport in Auckland reviewed...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿Which of the four events came with the most expensive food bill?...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿<div id="readability-page-1" class="page"><section data-test-ui="v2-article-section-top"><header da...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿2026 Kentucky Derby horses, odds, futures, preview, date: Expert who nailed 12 Derby-Oaks Doubles t...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿When is the Kentucky Derby 2026? Jody Demling revealed his 2026 Kentucky Derby picks for the Run fo...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
+--- Translation Attempt ---
+Input: ﻿As the calendar turns to spring shortly, the 2026 Kentucky Derby is rapidly approaching. That's esp...
+Status: 401
+Error Body: {"error":{"message":"User not found.","code":401}}
