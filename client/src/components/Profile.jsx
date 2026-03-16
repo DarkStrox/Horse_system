@@ -22,7 +22,6 @@ const Profile = () => {
     const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
     const [passwordError, setPasswordError] = useState('');
     const [activeTab, setActiveTab] = useState('personal');
-    const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
     const navigate = useNavigate();
     const fileInputRef = React.useRef(null);
 
@@ -183,14 +182,6 @@ const Profile = () => {
                                 <div className="space-y-2">
                                     <div className="flex items-center space-x-reverse space-x-3">
                                         <h2 className="text-3xl font-black text-gray-900">{user.fullName || "اسم المستخدم"}</h2>
-                                        <span className="bg-blue-50 text-blue-500 px-3 py-0.5 rounded-full text-xs font-bold flex items-center space-x-reverse space-x-1">
-                                            <i className="fas fa-check-circle text-[10px]"></i>
-                                            <span>موثق</span>
-                                        </span>
-                                        <span className="bg-yellow-50 text-yellow-600 px-3 py-0.5 rounded-full text-xs font-bold flex items-center space-x-reverse space-x-1">
-                                            <i className="fas fa-crown text-[10px]"></i>
-                                            <span>عضوية ذهبية</span>
-                                        </span>
                                     </div>
                                     <p className="text-gray-400 font-bold">{user.role || "عضو"}</p>
                                 </div>
@@ -283,19 +274,6 @@ const Profile = () => {
                                     className="bg-white text-gray-700 px-6 py-2.5 rounded-xl text-sm font-bold border border-gray-200 hover:bg-gray-50 shadow-sm transition"
                                 >
                                     تغيير كلمة المرور
-                                </button>
-                            </div>
-
-                            <div className="flex items-center justify-between p-6 bg-gray-50/50 rounded-3xl border border-gray-100">
-                                <div>
-                                    <p className="font-black text-gray-900">المصادقة الثنائية (2FA)</p>
-                                    <p className="text-xs text-gray-400 mt-1">أضف طبقة أمان إضافية لحسابك عبر رمز التحقق.</p>
-                                </div>
-                                <button
-                                    onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
-                                    className={`w-14 h-8 rounded-full relative transition-colors duration-300 shadow-inner ${twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'}`}
-                                >
-                                    <div className={`w-6 h-6 bg-white rounded-full absolute top-1 transition-all duration-300 shadow-sm ${twoFactorEnabled ? 'right-1' : 'right-7'}`}></div>
                                 </button>
                             </div>
                         </div>
@@ -482,7 +460,7 @@ const Profile = () => {
 
                         <button onClick={handleLogout} className="w-full flex items-center space-x-reverse space-x-3 p-4 rounded-3xl text-red-400 hover:bg-red-50 transition-colors font-bold text-sm">
                             <i className="fas fa-sign-out-alt"></i>
-                            <span>تسجيل الخروج برفق</span>
+                            <span>تسجيل الخروج </span>
                         </button>
                     </div>
 

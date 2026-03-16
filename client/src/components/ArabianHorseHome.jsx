@@ -3,12 +3,16 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import AboutSection from './AboutSection';
 
 const API_BASE_URL = 'http://localhost:5000';
 
 const ArabianHorseHome = () => {
     const [data, setData] = useState(null);
     const [user, setUser] = useState(null);
+    // حالة جديدة لتشغيل الأنيميشن عند تحميل الصفحة
+    const [isLoaded, setIsLoaded] = useState(false);
+
     const [isDarkMode, setIsDarkMode] = useState(() => {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) return savedTheme === 'dark';
@@ -18,16 +22,18 @@ const ArabianHorseHome = () => {
     useEffect(() => {
         fetch('/api/Home/page-content')
             .then(res => res.json())
-            .then(json => setData(json))
-            .catch(err => console.error("Error fetching data:", err));
+            .then(json => {
+                setData(json);
+                // تشغيل الأنيميشن بعد تحميل الداتا بجزء من الثانية
+                setTimeout(() => setIsLoaded(true), 100);
+            })
+            .catch(err => console.error(err));
 
         const token = localStorage.getItem('token');
         if (token) {
-            axios.get('/api/profile', {
-                headers: { Authorization: `Bearer ${token}` }
-            })
+            axios.get('/api/profile', { headers: { Authorization: `Bearer ${token}` } })
                 .then(res => setUser(res.data))
-                .catch(err => console.error("Error fetching user:", err));
+                .catch(err => console.error(err));
         }
     }, []);
 
@@ -41,112 +47,163 @@ const ArabianHorseHome = () => {
         }
     }, [isDarkMode]);
 
-    const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
+    if (!data) return <div className="text-center p-20 text-green-600 font-bold">جاري التحميل...</div>;
 
-    const getProfilePicUrl = (url) => {
-        if (!url) return "https://ui-avatars.com/api/?name=" + (user?.fullName || "User");
-        if (url.startsWith('http')) return url;
-        return API_BASE_URL + url;
-    };
-
-    if (!data) return <div className="text-center p-20 font-sans text-green-600">Loading...</div>;
+    // كلاسات الأنيميشن الثابتة لتسهيل استخدامها
+    const animationClass = `transition-all duration-1000 ease-out transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
+        }`;
 
     return (
-        <div className="bg-white dark:bg-gray-950 min-h-screen font-sans text-right selection:bg-green-100 transition-colors duration-300" dir="rtl">
+        <div className="bg-white dark:bg-gray-950 min-h-screen font-sans text-right transition-colors duration-300" dir="rtl">
             <Navbar />
 
+            {/* HERO SECTION */}
             <section className="container mx-auto px-16 py-12 flex flex-col md:flex-row items-center justify-between gap-16">
-                <div className="w-full md:w-1/2 space-y-8">
-                    <div>
-                        <span className="bg-[#E9F9E5] dark:bg-green-900/20 text-[#48B02C] dark:text-green-400 px-4 py-1.5 rounded-full text-xs font-black mb-6 inline-block tracking-wider underline">اللغة العربية</span>
-                        <h1 className="text-6xl font-black text-gray-900 dark:text-white leading-[1.15] mb-6">
-                            {data.hero.title.split('،').map((part, i) => (
-                                <React.Fragment key={i}>
-                                    <span className={i === 1 ? "text-[#76E05B]" : ""}>{part}{i === 0 ? "،" : ""}</span>
-                                    {i === 0 && <br />}
-                                </React.Fragment>
-                            ))}
-                        </h1>
-                        <p className="text-gray-400 dark:text-gray-500 text-xl leading-relaxed max-w-xl">
-                            {data.hero.description}
-                        </p>
-                    </div>
+                <div className={`w-full md:w-1/2 space-y-8 delay-100 ${animationClass}`}>
+                    <span className="bg-[#E9F9E5] text-[#48B02C] px-4 py-1.5 rounded-full text-xs font-black">
+                        اللغة العربية
+                    </span>
+                    <h1 className="text-6xl font-black text-gray-900 dark:text-white leading-[1.15]">
+                        {data.hero.title.split('،').map((part, i) => (
+                            <React.Fragment key={i}>
+                                <span className={i === 1 ? "text-[#76E05B]" : ""}>
+                                    {part}{i === 0 ? "،" : ""}
+                                </span>
+                                {i === 0 && <br />}
+                            </React.Fragment>
+                        ))}
+                    </h1>
+                    {/* تعديل لون الوصف ليكون text-gray-300 في الدارك مود علشان يبان */}
+                    <p className="text-gray-600 dark:text-gray-300 text-xl leading-relaxed max-w-xl">
+                        {data.hero.description}
+                    </p>
+
                     <div className="flex flex-col space-y-4 max-w-xs">
-                        <Link to="/about" className="border border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition text-center">
+                        {/* تعديل لون الزر الثانوي في الدارك مود */}
+                        <a
+                            href="#about"
+                            className="border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-200 px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition text-center"
+                        >
                             {data.hero.secondaryBtn}
-                        </Link>
-                        <Link to="/auctions" className="bg-[#76E05B] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl shadow-green-100 dark:shadow-green-900/20 hover:bg-green-500 transition text-center">
+                        </a>
+                        <Link
+                            to="/auctions"
+                            className="bg-[#76E05B] text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-green-500 transition text-center"
+                        >
                             {data.hero.primaryBtn}
                         </Link>
                     </div>
                 </div>
 
-                <div className="w-full md:w-1/2">
-                    <div className="rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white dark:border-gray-900 transition-colors duration-300">
-                        <img src="/hero-horse.png" alt="Hero Horse" className="w-full h-[500px] object-cover" />
+                <div className={`w-full md:w-1/2 delay-300 ${animationClass}`}>
+                    <div className="rounded-[3rem] overflow-hidden shadow-2xl">
+                        <img
+                            src="/hero-horse.png"
+                            alt="Horse"
+                            className="w-full h-[500px] object-cover hover:scale-105 transition-transform duration-700"
+                        />
                     </div>
                 </div>
             </section>
 
-            <section className="py-24 px-16">
-                <div className="container mx-auto">
+            {/* FEATURES SECTION */}
+            <section className="py-24 px-16 bg-gray-50 dark:bg-gray-900/30">
+                <div className={`container mx-auto delay-200 ${animationClass}`}>
                     <div className="text-center mb-16 space-y-3">
-                        <h2 className="text-4xl font-black text-gray-900 dark:text-white">الميزات الأساسية</h2>
-                        <p className="text-gray-400 dark:text-gray-500 text-lg">نظام متكامل لدعم كل جانب من جوانب ملكية وتجارة الخيل العربية</p>
+                        <h2 className="text-4xl font-black text-gray-900 dark:text-white">
+                            الميزات الأساسية
+                        </h2>
+                        {/* تعديل اللون للدارك مود */}
+                        <p className="text-gray-600 dark:text-gray-300 text-lg">
+                            نظام متكامل لدعم كل جانب من جوانب ملكية وتجارة الخيل العربية
+                        </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                         {data.features.map((f, i) => (
-                            <div key={i} className="bg-white dark:bg-gray-900 p-10 rounded-[2.5rem] shadow-xl shadow-gray-100/50 dark:shadow-black/20 border border-gray-50 dark:border-gray-800 hover:border-green-100 dark:hover:border-green-900 transition-all duration-300 group relative overflow-hidden">
-                                <div className="bg-[#F4FDF2] dark:bg-green-900/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-10 group-hover:scale-110 transition duration-300 absolute top-8 left-8">
+                            <div
+                                key={i}
+                                className="bg-white dark:bg-gray-900 p-10 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800 hover:border-green-300 dark:hover:border-green-600 transition-all duration-300 transform hover:-translate-y-2"
+                            >
+                                <div className="bg-[#F4FDF2] dark:bg-green-900/20 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
                                     <i className={`fas fa-${f.icon} text-[#76E05B] text-2xl`}></i>
                                 </div>
-                                <div className="mt-16">
-                                    <h3 className="text-2xl font-black text-gray-800 dark:text-white mb-4">{f.title}</h3>
-                                    <p className="text-gray-400 dark:text-gray-500 leading-relaxed text-base">{f.description}</p>
-                                </div>
+                                <h3 className="text-2xl font-black text-gray-800 dark:text-white mb-3">
+                                    {f.title}
+                                </h3>
+                                {/* تعديل اللون للدارك مود */}
+                                <p className="text-gray-600 dark:text-gray-300">
+                                    {f.description}
+                                </p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
+            {/* ABOUT SECTION */}
+            <div className={`delay-300 ${animationClass}`}>
+                <AboutSection />
+            </div>
+
+            {/* NEWS SECTION */}
             <section className="container mx-auto px-16 py-20">
-                <div className="flex flex-col md:flex-row items-center gap-20">
+                <div className={`flex flex-col md:flex-row items-center gap-20 delay-500 ${animationClass}`}>
                     <div className="w-full md:w-1/2">
                         <div className="rounded-[3rem] overflow-hidden shadow-2xl">
-                            <img src="/article-horse.png" alt="News" className="w-full h-[450px] object-cover" />
+                            <img
+                                src="/article-horse.png"
+                                alt="News"
+                                className="w-full h-[450px] object-cover hover:scale-105 transition-transform duration-700"
+                            />
                         </div>
                     </div>
 
                     <div className="w-full md:w-1/2 space-y-6">
-                        <span className="text-[#76E05B] font-black text-sm tracking-wider">أحدث الأخبار</span>
-                        <h2 className="text-5xl font-black text-gray-900 dark:text-white leading-tight">الأخبار والمقالات</h2>
-                        <h3 className="text-3xl font-bold text-gray-800 dark:text-gray-200 leading-snug">{data.mainArticle.title}</h3>
-                        <p className="text-gray-400 dark:text-gray-500 text-lg leading-loose">
+                        <span className="text-[#76E05B] font-black text-sm">
+                            أحدث الأخبار
+                        </span>
+                        <h2 className="text-5xl font-black text-gray-900 dark:text-white">
+                            الأخبار والمقالات
+                        </h2>
+                        <h3 className="text-3xl font-bold text-gray-800 dark:text-gray-200">
+                            {data.mainArticle.title}
+                        </h3>
+                        {/* تعديل اللون للدارك مود */}
+                        <p className="text-gray-600 dark:text-gray-300 text-lg">
                             {data.mainArticle.description}
                         </p>
-                        <Link to="/news" className="flex items-center space-x-reverse space-x-3 bg-[#76E05B] text-white px-8 py-3 rounded-full font-bold hover:bg-green-500 transition group w-fit">
+                        <Link
+                            to="/news"
+                            className="bg-[#76E05B] text-white px-8 py-3 rounded-full font-bold hover:bg-green-500 transition inline-flex items-center space-x-reverse space-x-2"
+                        >
                             <span>{data.mainArticle.buttonText}</span>
-                            <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-white group-hover:bg-white group-hover:text-green-500 transition">
-                                <i className="fas fa-arrow-left text-[10px]"></i>
-                            </div>
+                            <i className="fas fa-arrow-left text-xs"></i>
                         </Link>
                     </div>
                 </div>
             </section>
 
+            {/* CARDS SECTION */}
             <section className="container mx-auto px-16 py-20">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div className={`grid grid-cols-1 md:grid-cols-3 gap-12 delay-700 ${animationClass}`}>
                     {data.cards.map((c, i) => (
-                        <Link to={c.url} key={i} className="group cursor-pointer block">
-                            <div className="rounded-[2.5rem] overflow-hidden shadow-xl mb-6 relative h-64">
-                                <img src={`/${c.image}`} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                                <div className="absolute inset-0 bg-black/5 dark:bg-black/20 group-hover:bg-transparent transition duration-500"></div>
+                        <Link to={c.url} key={i} className="group block">
+                            <div className="rounded-3xl overflow-hidden shadow-xl mb-6 h-64 relative">
+                                <img
+                                    src={`/${c.image}`}
+                                    alt={c.title}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
                             </div>
+
                             <div className="space-y-2">
-                                <span className="text-[#76E05B] text-sm font-black underline uppercase">{c.category}</span>
+                                <span className="text-[#76E05B] text-sm font-black uppercase">{c.category}</span>
                                 <h4 className="text-2xl font-black text-gray-800 dark:text-white">{c.title}</h4>
+                                {/* تعديل اللون للدارك مود */}
+                                <p className="text-gray-600 dark:text-gray-300 text-base">
+                                    {c.shortDescription || "وصف مختصر للمقال أو الخبر."}
+                                </p>
                             </div>
                         </Link>
                     ))}

@@ -57,20 +57,32 @@ const NewsDetails = () => {
                 </div>
 
                 {/* Hero Image */}
-                <div className="rounded-[2.5rem] overflow-hidden shadow-2xl mb-12 border-4 border-white dark:border-gray-800">
+                <div className="rounded-[2.5rem] overflow-hidden shadow-2xl mb-12 border-4 border-white dark:border-gray-800 bg-gray-100 dark:bg-gray-900 min-h-[300px] flex items-center justify-center relative">
                     <img
-                        src={article.urlToImage?.startsWith('http') ? article.urlToImage : (article.urlToImage ? `${API_BASE_URL}${article.urlToImage}` : 'https://images.unsplash.com/photo-1534073737927-85f1df9605d2?q=80&w=1000&auto=format&fit=crop')}
+                        src={article.urlToImage && article.urlToImage.trim() !== "" ? (article.urlToImage.startsWith('http') ? article.urlToImage : `${API_BASE_URL}${article.urlToImage}`) : 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?q=80&w=1000&auto=format&fit=crop'}
                         alt={article.title}
-                        className="w-full h-auto max-h-[600px] object-cover"
+                        className="w-full h-auto max-h-[600px] object-cover transition-opacity duration-700 opacity-0"
+                        onLoad={(e) => e.target.style.opacity = 1}
+                        onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?q=80&w=1000&auto=format&fit=crop';
+                            e.target.style.opacity = 1;
+                        }}
                     />
                 </div>
 
                 {/* Content */}
                 <div className="prose prose-lg dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 leading-loose">
-                    <p className="text-xl font-medium mb-8 text-gray-800 dark:text-gray-100">{article.description}</p>
-                    <div className="bg-gray-50 dark:bg-gray-900 p-8 rounded-3xl border border-gray-100 dark:border-gray-800 mb-8">
-                        {/* Render HTML content if available (from SmartReader), otherwise text */}
-                        <div className="news-content" dangerouslySetInnerHTML={{ __html: article.content || 'لا يوجد محتوى إضافي متاح.' }} />
+                    {article.description && <p className="text-xl font-medium mb-8 text-gray-800 dark:text-gray-100 border-r-4 border-green-500 pr-4">{article.description}</p>}
+                    <div className="bg-gray-50 dark:bg-gray-900 p-8 rounded-3xl border border-gray-100 dark:border-gray-800 mb-8 shadow-inner">
+                        <div 
+                            className="news-content space-y-4" 
+                            dangerouslySetInnerHTML={{ 
+                                __html: article.content && article.content.length > 20 
+                                    ? article.content 
+                                    : (article.description || 'لا يوجد تفاصيل إضافية متاح حالياً.') 
+                            }} 
+                        />
                     </div>
                 </div>
 

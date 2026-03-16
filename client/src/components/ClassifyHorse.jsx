@@ -1,27 +1,37 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 
 const ClassifyHorse = () => {
-    const [formData, setFormData] = useState({
-        Height_cm: '',
-        Weight_kg: '',
-        Head_Profile: 'Straight',
-        Tail_Carriage: 'Medium',
-        Neck_Arch: 'Medium',
-        Rib_Count: '18',
-        Back_Length: 'Short'
-    });
-    const [isAdvanced, setIsAdvanced] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [classifying, setClassifying] = useState(false);
     const [result, setResult] = useState(null);
-    const [error, setError] = useState(null);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Feature Form State
+    const [mode, setMode] = useState('image'); // 'image' or 'info'
+    const [formData, setFormData] = useState({
+        Gender: 'Stallion',
+        Age: 5,
+        Height_cm: 150,
+        Weight_kg: 400,
+        Body_Format: 'Elegant',
+        Bone_Density: 'Medium',
+        Neck_Length: 'Long',
+        Chest_Width: 'Medium'
+    });
+
+    const handleModeSwitch = (newMode) => {
+        setMode(newMode);
+        setResult(null);
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
     const handleImageChange = (e) => {
@@ -29,53 +39,96 @@ const ClassifyHorse = () => {
         if (file) {
             setSelectedImage(file);
             setPreviewUrl(URL.createObjectURL(file));
+            setResult(null);
         }
     };
 
-    const convertToBase64 = (file) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = (error) => reject(error);
-        });
-    };
-
-    const handleClassify = async (e) => {
-        e.preventDefault();
-
-        if (isAdvanced && !selectedImage) {
-            setError("يرجى رفع صورة للحصان عند تفعيل الوضع المتقدم.");
-            return;
-        }
-
+    const handleClassify = async () => {
+        if (mode === 'image' && !selectedImage) return;
         setClassifying(true);
-        setError(null);
         setResult(null);
 
         try {
-            let imageData = null;
-            if (isAdvanced && selectedImage) {
-                imageData = await convertToBase64(selectedImage);
+            if (mode === 'image') {
+                // Image to Base64
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    try {
+                        const base64String = reader.result;
+
+                        const response = await fetch('http://localhost:5000/api/ai/predict-breed', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                ImageData: base64String
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('فشل في تحليل الصورة');
+                        }
+
+                        const data = await response.json();
+
+                        setResult({
+                            type: data.breedArabic || data.breed || 'خيل عربي أصيل',
+                            confidence: data.confidence,
+                            details: 'نتيجة التحليل البصري'
+                        });
+                    } catch (error) {
+                        console.error('Image prediction error:', error);
+                        alert('حدث خطأ أثناء تحليل الصورة. يرجى المحاولة مرة أخرى.');
+                    } finally {
+                        setClassifying(false);
+                    }
+                };
+
+                reader.onerror = () => {
+                    console.error('File reading error');
+                    alert('حدث خطأ في قراءة الصورة.');
+                    setClassifying(false);
+                };
+
+                reader.readAsDataURL(selectedImage);
+            } else {
+                // Info Prediction
+                const payload = {
+                    Gender: formData.Gender,
+                    Age: parseInt(formData.Age),
+                    Height_cm: parseFloat(formData.Height_cm),
+                    Weight_kg: parseFloat(formData.Weight_kg),
+                    Body_Format: formData.Body_Format,
+                    Bone_Density: formData.Bone_Density,
+                    Neck_Length: formData.Neck_Length,
+                    Chest_Width: formData.Chest_Width
+                };
+
+                const response = await fetch('http://localhost:5000/api/ai/predict-strain', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error('فشل في تحليل البيانات');
+                }
+
+                const data = await response.json();
+
+                setResult({
+                    type: `${data.predictedStrainArabic}\n(${data.predictedStrain})`,
+                    confidence: data.confidence,
+                    details: 'توقع السلالة (STRAIN)'
+                });
+                setClassifying(false);
             }
-
-            const payload = {
-                ...formData,
-                Height_cm: parseFloat(formData.Height_cm),
-                Weight_kg: parseFloat(formData.Weight_kg),
-                Rib_Count: parseInt(formData.Rib_Count),
-                IsAdvanced: isAdvanced,
-                ImageData: imageData
-            };
-
-            const response = await axios.post('http://localhost:5000/api/ai/predict-breed', payload);
-            setResult(response.data);
-
-        } catch (err) {
-            console.error("AI Prediction Error:", err);
-            const errorMsg = err.response?.data?.error || err.response?.data?.details || err.message || "فشل الاتصال بخادم الذكاء الاصطناعي.";
-            setError(errorMsg + (err.response?.status ? ` (Code: ${err.response.status})` : ''));
-        } finally {
+        } catch (error) {
+            console.error('Classification error:', error);
+            alert('حدث خطأ أثناء التحليل. يرجى المحاولة مرة أخرى.');
             setClassifying(false);
         }
     };
@@ -84,231 +137,223 @@ const ClassifyHorse = () => {
         <div className="bg-[#FAFBF9] dark:bg-gray-950 min-h-screen font-sans text-right selection:bg-green-100 transition-colors duration-300" dir="rtl">
             <Navbar />
 
-            <section className="container mx-auto px-4 py-16 flex flex-col items-center">
-                <div className="text-center max-w-3xl mx-auto mb-12 space-y-6">
-                    <span className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-4 py-1.5 rounded-full text-xs font-black">Beta AI</span>
-                    <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white leading-tight">
+            <section className="container mx-auto px-16 py-20 min-h-[80vh] flex flex-col items-center">
+                <div className="text-center max-w-3xl mx-auto mb-16 space-y-6">
+                    <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-xs font-black">Beta AI</span>
+                    <h1 className="text-5xl font-black text-gray-900 dark:text-white leading-tight">
                         تحديد نوع الحصان <span className="text-green-500">بالذكاء الاصطناعي</span>
                     </h1>
-                    <p className="text-gray-400 dark:text-gray-500 text-lg md:text-xl leading-relaxed">
-                        أدخل الخصائص البدنية للحصان ليقوم نظامنا الذكي بتحليلها وتحديد السلالة بدقة عالية.
+                    <p className="text-gray-400 dark:text-gray-500 text-xl leading-relaxed">
+                        قم برفع صورة للحصان وسيقوم نظامنا الذكي بتحليلها وتحديد السلالة بدقة عالية.
                     </p>
                 </div>
 
-                <div className="w-full max-w-3xl bg-white dark:bg-gray-900 rounded-[3rem] p-8 md:p-12 shadow-2xl border border-gray-100 dark:border-gray-800">
-
-                    {/* Advanced Toggle */}
-                    <div className="flex items-center justify-between mb-10 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-800">
-                        <div className="space-y-1">
-                            <h3 className="font-black text-gray-900 dark:text-white">التحليل المتقدم (Advanced AI)</h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">تحليل صورة الحصان مع البيانات للحصول على دقة أعلى.</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={isAdvanced}
-                                onChange={(e) => setIsAdvanced(e.target.checked)}
-                                className="sr-only peer"
-                            />
-                            <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-green-500"></div>
-                        </label>
+                <div className="w-full max-w-2xl bg-white dark:bg-[#0f172a] rounded-[3rem] p-10 shadow-2xl border border-gray-100 dark:border-gray-800 relative z-10 mx-auto mt-8">
+                    {/* Mode Toggle */}
+                    <div className="flex bg-gray-100 dark:bg-gray-800 p-1.5 rounded-2xl mb-10 mx-auto max-w-sm relative">
+                        <div
+                            className={`absolute top-1.5 bottom-1.5 w-[calc(50%-0.375rem)] bg-white dark:bg-gray-700 rounded-xl shadow-sm transition-all duration-300 ease-in-out ${mode === 'info' ? 'translate-x-full left-1.5' : 'left-1.5'}`}
+                        ></div>
+                        <button
+                            onClick={() => handleModeSwitch('image')}
+                            className={`flex-1 flex items-center justify-center space-x-reverse space-x-2 py-3 rounded-xl text-sm font-bold transition-colors relative z-10 ${mode === 'image' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                        >
+                            <i className="fas fa-image"></i>
+                            <span>تحديد بالصورة</span>
+                        </button>
+                        <button
+                            onClick={() => handleModeSwitch('info')}
+                            className={`flex-1 flex items-center justify-center space-x-reverse space-x-2 py-3 rounded-xl text-sm font-bold transition-colors relative z-10 ${mode === 'info' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                        >
+                            <i className="fas fa-list-ul"></i>
+                            <span>تحديد بالبيانات</span>
+                        </button>
                     </div>
 
-                    <form onSubmit={handleClassify} className="space-y-8">
+                    {mode === 'image' ? (
+                        <div className="border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[2rem] p-10 text-center relative hover:border-green-300 dark:hover:border-green-900 transition-colors group cursor-pointer"
+                            onClick={() => document.getElementById('horse-image-upload').click()}
+                        >
+                            <input
+                                type="file"
+                                id="horse-image-upload"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleImageChange}
+                            />
 
-                        {/* Image Upload Area - Only shows if advanced enabled */}
-                        {isAdvanced && (
-                            <div className="animate-in fade-in slide-in-from-top-4">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-4">صورة الحصان *</label>
-                                <div
-                                    className="border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-3xl p-8 text-center cursor-pointer hover:border-green-300 transition-colors"
-                                    onClick={() => document.getElementById('horse-image').click()}
-                                >
-                                    <input
-                                        type="file"
-                                        id="horse-image"
-                                        className="hidden"
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                    />
-                                    {previewUrl ? (
-                                        <div className="relative inline-block">
-                                            <img src={previewUrl} alt="Preview" className="max-h-64 rounded-2xl shadow-md" />
-                                            <div className="absolute top-2 right-2 bg-white dark:bg-gray-900 w-8 h-8 rounded-full flex items-center justify-center shadow-lg">
-                                                <i className="fas fa-check text-green-500"></i>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="py-6 space-y-4">
-                                            <div className="w-16 h-16 bg-green-50 dark:bg-green-900/20 text-green-500 rounded-2xl flex items-center justify-center mx-auto text-2xl">
-                                                <i className="fas fa-camera"></i>
-                                            </div>
-                                            <p className="text-gray-400 font-bold">اضغط لرفع صورة واضحة للحصان</p>
-                                        </div>
-                                    )}
+                            {previewUrl ? (
+                                <div className="relative">
+                                    <img src={previewUrl} alt="Preview" className="max-h-80 mx-auto rounded-2xl shadow-lg" />
+                                    <button
+                                        className="absolute -top-4 -right-4 bg-red-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedImage(null);
+                                            setPreviewUrl(null);
+                                            setResult(null);
+                                        }}
+                                    >
+                                        <i className="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-6 py-10">
+                                    <div className="w-24 h-24 bg-green-50 dark:bg-green-900/20 text-green-500 rounded-full flex items-center justify-center mx-auto text-4xl group-hover:scale-110 transition duration-300">
+                                        <i className="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h3 className="text-xl font-black text-gray-800 dark:text-gray-200 text-center">اضغط لرفع صورة</h3>
+                                        <p className="text-gray-400 text-sm font-bold text-center">صورة الحصان *</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="space-y-6 mt-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* Gender */}
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                        (Gender) الجنس
+                                    </label>
+                                    <select
+                                        name="Gender"
+                                        value={formData.Gender}
+                                        onChange={handleInputChange}
+                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                                    >
+                                        <option value="Stallion">Stallion (ذكر)</option>
+                                        <option value="Mare">Mare (أنثى)</option>
+                                        <option value="Gelding">Gelding (مخصي)</option>
+                                    </select>
+                                </div>
+
+                                {/* Body Format */}
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                        Body Format
+                                    </label>
+                                    <select
+                                        name="Body_Format"
+                                        value={formData.Body_Format}
+                                        onChange={handleInputChange}
+                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                                    >
+                                        <option value="Elegant">Elegant (أنيق)</option>
+                                        <option value="Compact">Compact (مدمج)</option>
+                                        <option value="Muscular">Muscular (عضلي)</option>
+                                        <option value="Lean">Lean (نحيل)</option>
+                                    </select>
+                                </div>
+
+                                {/* Bone Density */}
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                        Bone Density
+                                    </label>
+                                    <select
+                                        name="Bone_Density"
+                                        value={formData.Bone_Density}
+                                        onChange={handleInputChange}
+                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                                    >
+                                        <option value="Light">Light (خفيف)</option>
+                                        <option value="Medium">Medium (متوسط)</option>
+                                        <option value="Heavy">Heavy (ثقيل)</option>
+                                    </select>
+                                </div>
+
+                                {/* Neck Length */}
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                        Neck Length
+                                    </label>
+                                    <select
+                                        name="Neck_Length"
+                                        value={formData.Neck_Length}
+                                        onChange={handleInputChange}
+                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                                    >
+                                        <option value="Short">Short (قصير)</option>
+                                        <option value="Medium">Medium (متوسط)</option>
+                                        <option value="Long">Long (طويل)</option>
+                                    </select>
+                                </div>
+
+                                {/* Chest Width */}
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                                        Chest Width
+                                    </label>
+                                    <select
+                                        name="Chest_Width"
+                                        value={formData.Chest_Width}
+                                        onChange={handleInputChange}
+                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                                    >
+                                        <option value="Narrow">Narrow (ضيق)</option>
+                                        <option value="Medium">Medium (متوسط)</option>
+                                        <option value="Broad">Broad (عريض)</option>
+                                    </select>
                                 </div>
                             </div>
-                        )}
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Numeric Fields */}
-                            <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">الارتفاع (سم) *</label>
-                                <input
-                                    type="number"
-                                    name="Height_cm"
-                                    value={formData.Height_cm}
-                                    onChange={handleChange}
-                                    required
-                                    step="0.1"
-                                    placeholder="مثال: 155.5"
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition text-gray-900 dark:text-white"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">الوزن (كجم) *</label>
-                                <input
-                                    type="number"
-                                    name="Weight_kg"
-                                    value={formData.Weight_kg}
-                                    onChange={handleChange}
-                                    required
-                                    step="0.1"
-                                    placeholder="مثال: 450.0"
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition text-gray-900 dark:text-white"
-                                />
-                            </div>
-
-                            {/* Select Fields */}
-                            <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">ملامح الرأس *</label>
-                                <select
-                                    name="Head_Profile"
-                                    value={formData.Head_Profile}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition text-gray-900 dark:text-white"
-                                >
-                                    <option value="Straight">مستقيم (Straight)</option>
-                                    <option value="Roman">روماني (Roman)</option>
-                                    <option value="Dished">مقعر / دبي (Dished)</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">وضعية الذيل *</label>
-                                <select
-                                    name="Tail_Carriage"
-                                    value={formData.Tail_Carriage}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition text-gray-900 dark:text-white"
-                                >
-                                    <option value="High">مرتفع (High)</option>
-                                    <option value="Medium">متوسط (Medium)</option>
-                                    <option value="Low">منخفض (Low)</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">تقوس الرقبة *</label>
-                                <select
-                                    name="Neck_Arch"
-                                    value={formData.Neck_Arch}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition text-gray-900 dark:text-white"
-                                >
-                                    <option value="High">مرتفع (High)</option>
-                                    <option value="Medium">متوسط (Medium)</option>
-                                    <option value="Low">منخفض (Low)</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">عدد الأضلاع *</label>
-                                <select
-                                    name="Rib_Count"
-                                    value={formData.Rib_Count}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition text-gray-900 dark:text-white"
-                                >
-                                    <option value="17">17 (نادر - غالباً خيول عربية)</option>
-                                    <option value="18">18 (شائع)</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300">طول الظهر *</label>
-                                <select
-                                    name="Back_Length"
-                                    value={formData.Back_Length}
-                                    onChange={handleChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition text-gray-900 dark:text-white"
-                                >
-                                    <option value="Short">قصير (Short)</option>
-                                    <option value="Long">طويل (Long)</option>
-                                </select>
-                            </div>
                         </div>
+                    )}
 
+                    <div className="mt-8 text-center">
                         <button
-                            type="submit"
-                            disabled={classifying}
-                            className={`w-full py-5 rounded-2xl font-black text-xl transition shadow-xl ${classifying
-                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            className={`w-full py-4 rounded-2xl font-black text-lg transition shadow-xl ${((mode === 'image' && !selectedImage) || classifying)
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600'
                                 : 'bg-[#76E05B] text-white hover:bg-green-500 shadow-green-100 dark:shadow-green-900/20'
                                 }`}
+                            disabled={(mode === 'image' && !selectedImage) || classifying}
+                            onClick={handleClassify}
                         >
                             {classifying ? (
                                 <span className="flex items-center justify-center space-x-reverse space-x-3">
                                     <i className="fas fa-spinner fa-spin"></i>
                                     <span>جاري التحليل...</span>
                                 </span>
-                            ) : 'بدا التحليل'}
+                            ) : 'ابدأ التحليل'}
                         </button>
-                    </form>
-
-                    {error && (
-                        <div className="mt-8 bg-red-50 dark:bg-red-900/10 p-6 rounded-2xl border border-red-100 dark:border-red-900 text-red-600 dark:text-red-400 flex items-center space-x-reverse space-x-3">
-                            <i className="fas fa-exclamation-triangle"></i>
-                            <p className="font-bold">{error}</p>
-                        </div>
-                    )}
+                    </div>
 
                     {result && (
-                        <div className="mt-10 animate-in fade-in slide-in-from-bottom-4 space-y-6">
-                            {/* ML Base Result - Hidden if advanced mismatch */}
-                            {(!result.advancedFeedback || result.matches) && (
-                                <div className="bg-green-50 dark:bg-green-900/10 p-8 rounded-3xl border border-green-100 dark:border-green-900 shadow-xl shadow-green-100/20">
-                                    <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-reverse md:space-x-8">
-                                        <div className="w-20 h-20 bg-green-500 text-white rounded-[2rem] flex items-center justify-center text-3xl shadow-lg shrink-0">
-                                            <i className="fas fa-horse-head"></i>
-                                        </div>
-                                        <div className="text-center md:text-right">
-                                            <p className="text-sm font-black text-green-600 mb-2 uppercase tracking-widest">تحليل البيانات</p>
-                                            <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">{result.breedArabic}</h2>
-                                            <p className="text-gray-500 dark:text-gray-400 leading-relaxed font-bold">
-                                                بناءً على السمات البدنية، الحصان هو <span className="text-green-600 underline">{result.breedArabic}</span>.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                        <div className="mt-10 bg-[#0f3b20] dark:bg-[#0a2715] p-8 rounded-2xl border border-green-800 animate-in fade-in slide-in-from-bottom-4 shadow-2xl relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent"></div>
 
-                            {/* Grok Feedback Result */}
-                            {result.advancedFeedback && (
-                                <div className="bg-blue-50 dark:bg-blue-900/10 p-8 rounded-3xl border border-blue-100 dark:border-blue-900 shadow-xl shadow-blue-100/20">
-                                    <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-reverse md:space-x-8">
-                                        <div className="w-20 h-20 bg-blue-600 text-white rounded-[2rem] flex items-center justify-center text-3xl shadow-lg shrink-0">
-                                            <i className="fas fa-microchip"></i>
-                                        </div>
-                                        <div className="text-center md:text-right">
-                                            <p className="text-sm font-black text-blue-600 mb-2 uppercase tracking-widest">تقييم Advanced AI</p>
-                                            <p className="text-gray-800 dark:text-gray-200 text-lg leading-relaxed font-bold italic">
-                                                "{result.advancedFeedback}"
-                                            </p>
-                                        </div>
+                            <div className="relative z-10">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="w-16 h-16 bg-[#2ed86a] text-white rounded-[1.2rem] flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(46,216,106,0.4)] shrink-0">
+                                        <i className="fas fa-horse-head"></i>
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-sm font-bold text-[#b4e8c6] mb-1">{result.details}</p>
+                                        <h2 className="text-3xl font-black text-white whitespace-pre-line">
+                                            {result.type}
+                                            {!(result.type.includes('عربي') || result.type.toLowerCase().includes('arabian')) && (
+                                                <span className="text-sm font-bold text-red-400 mr-2 block mt-1">
+                                                    (غير عربي - Not Arabian)
+                                                </span>
+                                            )}
+                                        </h2>
                                     </div>
                                 </div>
-                            )}
+
+                                <div className="space-y-2 mt-4">
+                                    <div className="flex justify-between items-center text-sm font-bold text-[#b4e8c6]">
+                                        <span>نسبة الثقة المدعومة بالذكاء الاصطناعي</span>
+                                        <span>{Number(result.confidence).toFixed(3)}%</span>
+                                    </div>
+                                    <div className="w-full bg-[#1b4a2e] rounded-full h-2.5 overflow-hidden">
+                                        <div
+                                            className="bg-[#2ed86a] h-2.5 rounded-full transition-all duration-1000 ease-out"
+                                            style={{ width: `${result.confidence}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

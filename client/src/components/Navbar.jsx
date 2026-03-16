@@ -68,12 +68,11 @@ const Navbar = () => {
     const navLinks = [
         { name: 'الرئيسية', path: '/' },
         { name: 'ملفات الخيل', path: '/horses' },
-        { name: 'المبيعات', path: '/sales' },
+        { name: 'المرابط', path: '/studs' },
         { name: 'المزادات', path: '/auctions' },
         { name: 'تحديد نوع الحصان', path: '/classify' },
         { name: 'الأخبار', path: '/news' },
-        { name: 'من نحن', path: '/about' },
-        { name: 'انضم إلينا', path: '/join' },
+
     ];
 
     if (user?.role === 'Admin') {

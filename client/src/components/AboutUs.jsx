@@ -61,15 +61,13 @@ const AboutUs = () => {
                         </p>
                     </div>
 
-                    <div className="flex items-center space-x-reverse space-x-6">
-                        <button className="bg-gray-900 text-white px-10 py-4 rounded-2xl font-black text-lg hover:bg-black transition shadow-xl">
-                            تعرف على رسالتنا
-                        </button>
-                        <button className="flex items-center space-x-reverse space-x-3 text-gray-600 dark:text-gray-300 font-bold hover:text-green-500 transition group">
-                            <div className="w-12 h-12 rounded-full border-2 border-gray-200 flex items-center justify-center group-hover:border-green-500 transition">
+                    {/* Centered Video Button Under Text */}
+                    <div className="flex justify-center items-center max-w-xl pt-2">
+                        <button className="flex items-center space-x-reverse space-x-4 text-gray-600 dark:text-gray-300 font-bold hover:text-green-500 transition group bg-gray-50 dark:bg-gray-900/50 px-8 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md">
+                            <div className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center group-hover:border-green-500 transition bg-white dark:bg-gray-800">
                                 <i className="fas fa-play text-xs"></i>
                             </div>
-                            <span>تشاهد الفيديو التعريفي</span>
+                            <span className="text-lg">شاهد الفيديو التعريفي</span>
                         </button>
                     </div>
                 </div>
@@ -94,12 +92,12 @@ const AboutUs = () => {
             </section>
 
             {/* Stats Section */}
-            <section className="py-20 bg-gray-50/50 dark:bg-gray-900/20">
+            <section className="py-20 bg-gray-50/50 dark:bg-gray-900/20 mb-10">
                 <div className="container mx-auto px-16">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
                         {[
                             { label: 'خيل مسجل', value: '5,000' },
-                            { label: 'مدرب ومالك', value: '1,200' },
+                            { label: 'مرابط', value: '1,200' },
                             { label: 'مزاد ناجح', value: '350' },
                             { label: 'دعم فني', value: '24/7' }
                         ].map((stat, i) => (
@@ -108,107 +106,6 @@ const AboutUs = () => {
                                 <p className="text-gray-400 font-bold">{stat.label}</p>
                             </div>
                         ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Core Values Section */}
-            <section className="py-32 container mx-auto px-16">
-                <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
-                    <h2 className="text-4xl font-black text-gray-900 dark:text-white">جوهر النظام</h2>
-                    <p className="text-gray-400 text-lg leading-relaxed">
-                        نجمع بين أصالة الماضي وتقنيات المستقبل لخدمة مجتمع الخيل العربية.
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                    {[
-                        {
-                            title: 'رسالتنا',
-                            icon: 'flag',
-                            color: 'bg-green-50 text-green-500',
-                            desc: 'تمكين ملاك ومربي الخيل العربية من خلال توفير منصة رقمية شاملة تسهل إدارة السجلات، التوثيق، وعمليات البيع والشراء بأعلى معايير الشفافية.'
-                        },
-                        {
-                            title: 'رؤيتنا',
-                            icon: 'eye',
-                            color: 'bg-blue-50 text-blue-500',
-                            desc: 'أن نكون المرجع العالمي الأول والموثوق لكل ما يتعلق بالخيل العربية، وواجهة حضارية تعكس عراقة هذا الموروث للعالم أجمع.'
-                        },
-                        {
-                            title: 'قيمنا',
-                            icon: 'gem',
-                            color: 'bg-yellow-50 text-yellow-500',
-                            desc: 'الأصالة في المحتوى، الشفافية في التعاملات، والابتكار المستمر في الحلول التقنية لتلبية احتياجات مجتمعنا.'
-                        }
-                    ].map((card, i) => (
-                        <div key={i} className="bg-white dark:bg-gray-900 p-10 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 flex flex-col items-center text-center space-y-8">
-                            <div className={`${card.color} w-20 h-20 rounded-[2rem] flex items-center justify-center text-3xl shadow-inner`}>
-                                <i className={`fas fa-${card.icon}`}></i>
-                            </div>
-                            <h3 className="text-2xl font-black text-gray-900 dark:text-white">{card.title}</h3>
-                            <p className="text-gray-400 leading-relaxed font-bold">
-                                {card.desc}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* Why Us Section */}
-            <section className="py-32 container mx-auto px-16">
-                <div className="flex flex-col lg:flex-row items-center gap-24">
-                    <div className="w-full lg:w-1/2 space-y-12">
-                        <h2 className="text-5xl font-black text-gray-900 dark:text-white leading-tight">لماذا نظام الخيل العربية؟</h2>
-
-                        <div className="space-y-10">
-                            {[
-                                { title: 'هوية رقمية لكل خيل', desc: 'ملف تعريفي شامل يشمل النسب الصور، والجوائز لكل خيل بشكل مفصل.', icon: 'id-card', color: 'bg-green-100 text-green-600' },
-                                { title: 'مزادات إلكترونية آمنة', desc: 'نظام مزايدة حي ومباشر يضمن حقوق البائع والمشتري مع توثيق مالي متكامل.', icon: 'gavel', color: 'bg-blue-100 text-blue-600' },
-                                { title: 'مجتمع متخصص', desc: 'تواصل مع كبار المربين والخبراء في مجال الخيل العربية من جميع أنحاء العالم.', icon: 'users', color: 'bg-purple-100 text-purple-600' }
-                            ].map((item, i) => (
-                                <div key={i} className="flex items-start space-x-reverse space-x-6 group">
-                                    <div className={`${item.color} w-16 h-16 shrink-0 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition`}>
-                                        <i className={`fas fa-${item.icon}`}></i>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <h4 className="text-xl font-black text-gray-900 dark:text-white group-hover:text-green-500 transition">{item.title}</h4>
-                                        <p className="text-gray-400 font-medium leading-relaxed">{item.desc}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="w-full lg:w-1/2">
-                        <div className="rounded-[4rem] overflow-hidden shadow-2xl relative">
-                            <img src="/about/why_us.png" alt="Why Us Highlight" className="w-full h-[550px] object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="container mx-auto px-16 py-20 pb-40">
-                <div className="bg-gray-900 rounded-[4rem] p-20 relative overflow-hidden text-center space-y-10">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/10 rounded-full blur-[120px] -mr-48 -mt-48"></div>
-                    <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] -ml-48 -mb-48"></div>
-
-                    <div className="relative z-10 space-y-6 max-w-3xl mx-auto">
-                        <h2 className="text-5xl font-black text-white leading-tight">كن جزءاً من مستقبل الخيل العربية</h2>
-                        <p className="text-gray-400 text-xl leading-relaxed">
-                            انضم الآن إلى أكبر تجمع رقمي لملاك ومحبي الخيل العربية، وثق خيلك وشارك شغفك.
-                        </p>
-                    </div>
-
-                    <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <Link to={user ? "/auctions" : "/register"} className="bg-[#76E05B] text-white px-12 py-5 rounded-3xl font-black text-xl hover:bg-green-500 transition shadow-xl shadow-green-900/20 w-full sm:w-auto">
-                            ابدأ رحلتك الآن
-                        </Link>
-                        <Link to="/contact" className="bg-white/10 text-white border border-white/20 backdrop-blur-sm px-12 py-5 rounded-3xl font-black text-xl hover:bg-white/20 transition w-full sm:w-auto">
-                            تواصل معنا
-                        </Link>
                     </div>
                 </div>
             </section>

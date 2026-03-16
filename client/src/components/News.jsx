@@ -11,6 +11,7 @@ const News = () => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [isScraping, setIsScraping] = useState(false);
 
     const [isAdmin, setIsAdmin] = useState(false);
 
@@ -60,6 +61,23 @@ const News = () => {
         }
     };
 
+    const handleManualScrape = async () => {
+        setIsScraping(true);
+        try {
+            const token = localStorage.getItem('token');
+            await axios.post(`${API_BASE_URL}/api/News/scrape`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert('تم بدء تحديث الأخبار بنجاح! قد يستغرق الأمر دقيقة لتحديث القائمة.');
+            setTimeout(fetchNews, 5000); // Wait a bit then refresh
+        } catch (err) {
+            console.error("Scrape error:", err);
+            alert('فشل تحديث الأخبار: ' + (err.response?.data?.error || 'خطأ غير معروف'));
+        } finally {
+            setIsScraping(false);
+        }
+    };
+
     return (
         <div className="bg-[#FDFDFD] dark:bg-gray-950 min-h-screen font-sans text-right selection:bg-green-100 transition-colors duration-300" dir="rtl">
             <Navbar />
@@ -75,15 +93,29 @@ const News = () => {
                     ابق على اطلاع بكل ما هو جديد في عالم الخيل العربية، من سباقات، مزادات، وأخبار عالمية.
                 </p>
 
-                {/* Admin Add Button */}
+                {/* Admin Buttons */}
                 {isAdmin && (
-                    <button
-                        onClick={() => setIsSearchOpen(true)}
-                        className="mt-8 bg-[#76E05B] text-white px-8 py-3 rounded-2xl font-black shadow-lg shadow-green-100 hover:bg-green-600 transition flex items-center gap-2 mx-auto"
-                    >
-                        <i className="fas fa-plus"></i>
-                        <span>إضافة خبر جديد</span>
-                    </button>
+                    <div className="mt-8 flex flex-wrap justify-center gap-4">
+                        <button
+                            onClick={() => setIsSearchOpen(true)}
+                            className="bg-[#76E05B] text-white px-8 py-3 rounded-2xl font-black shadow-lg shadow-green-100 hover:bg-green-600 transition flex items-center gap-2"
+                        >
+                            <i className="fas fa-plus"></i>
+                            <span>إضافة خبر جديد</span>
+                        </button>
+                        <button
+                            onClick={handleManualScrape}
+                            disabled={isScraping}
+                            className={`px-8 py-3 rounded-2xl font-black shadow-lg flex items-center gap-2 transition ${
+                                isScraping 
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                                : 'bg-blue-500 text-white shadow-blue-100 hover:bg-blue-600'
+                            }`}
+                        >
+                            <i className={`fas ${isScraping ? 'fa-spinner fa-spin' : 'fa-sync-alt'}`}></i>
+                            <span>{isScraping ? 'جاري التحديث...' : 'تحديث الأخبار الآن'}</span>
+                        </button>
+                    </div>
                 )}
             </header>
 
@@ -113,9 +145,15 @@ const News = () => {
                                 {/* Image Wrapper */}
                                 <div className="relative h-64 mb-6 overflow-hidden rounded-[1.5rem]">
                                     <img
-                                        src={item.urlToImage?.startsWith('http') ? item.urlToImage : (item.urlToImage ? `${API_BASE_URL}${item.urlToImage}` : 'https://images.unsplash.com/photo-1534073737927-85f1df9605d2?q=80&w=1000&auto=format&fit=crop')}
+                                        src={item.urlToImage && item.urlToImage.trim() !== "" ? (item.urlToImage.startsWith('http') ? item.urlToImage : `${API_BASE_URL}${item.urlToImage}`) : 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?q=80&w=1000&auto=format&fit=crop'}
                                         alt={item.title}
-                                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                                        className="w-full h-full object-cover transform group-hover:scale-110 transition-all duration-700 opacity-0"
+                                        onLoad={(e) => e.target.style.opacity = 1}
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?q=80&w=1000&auto=format&fit=crop';
+                                            e.target.style.opacity = 1;
+                                        }}
                                     />
                                     <div className="absolute top-4 right-4 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-gray-800 dark:text-white shadow-sm">
                                         {new Date(item.publishedAt).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}
