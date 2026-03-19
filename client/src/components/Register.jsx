@@ -26,7 +26,6 @@ const Register = () => {
 
     const roles = [
         { id: 'User', title: 'مستخدم ', icon: 'user', desc: 'سجل لإنشاء حساب شخصي لتصفح الخيول والتفاعل مع المجتمع.', needsApproval: false },
-        { id: 'Buyer', title: 'مشتري', icon: 'shopping-bag', desc: 'سجل كمشتري لتصفح واقتناء الخيول العربية الأصيلة.', needsApproval: false },
         { id: 'Seller', title: 'بائع', icon: 'store', desc: 'انضم كبائع لعرض خيولك ومزرعتك في منصتنا.', needsApproval: true },
         { id: 'EquineVet', title: 'طبيب بيطري', icon: 'user-md', desc: 'انضم كطبيب بيطري معتمد لفحص وعلاج الخيول.', needsApproval: true }
     ];
@@ -48,8 +47,7 @@ const Register = () => {
         sellerRole: '',
         recommendationLetter: null,
 
-        // مشتري
-        governorate: '',
+
 
         // سؤال مشترك
         howDidYouHear: '',
@@ -149,7 +147,7 @@ const Register = () => {
             return;
         }
 
-        if (['Buyer', 'Seller', 'EquineVet'].includes(role) && formData.nationalId.length < 14) {
+        if (['Seller', 'EquineVet'].includes(role) && formData.nationalId.length < 14) {
             setError('الرقم القومي يجب أن يتكون من 14 رقماً');
             return;
         }
@@ -164,7 +162,7 @@ const Register = () => {
             payload.append('password', formData.password);
             payload.append('phoneNumber', formData.phoneNumber);
 
-            if (['Buyer', 'Seller', 'EquineVet'].includes(role) && formData.howDidYouHear) {
+            if (['Seller', 'EquineVet'].includes(role) && formData.howDidYouHear) {
                 const finalHowDidYouHear = formData.howDidYouHear === 'أخرى' && formData.otherHowDidYouHear.trim() !== ''
                     ? formData.otherHowDidYouHear
                     : formData.howDidYouHear;
@@ -198,10 +196,7 @@ const Register = () => {
                 payload.append('vetCertificates', formData.vetCertificates);
             }
 
-            if (role === 'Buyer') {
-                payload.append('nationalId', formData.nationalId);
-                if (formData.governorate) payload.append('governorate', formData.governorate);
-            }
+
 
             await axios.post('/api/account/register', payload, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -716,42 +711,6 @@ const Register = () => {
                                                 {filePreviews.recommendationLetter && <div className="mt-2 text-sm text-green-600 font-bold">تم الإرفاق ✓</div>}
                                             </div>
                                         </div>
-                                    </div>
-                                )}
-
-                                {/* نموذج المشتري */}
-                                {role === 'Buyer' && (
-                                    <div className="space-y-6 mt-8 border-t border-gray-100 dark:border-gray-800 pt-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-bold text-gray-700 dark:text-gray-300">رقم البطاقة (الرقم القومي)</label>
-                                                <input
-                                                    type="text"
-                                                    name="nationalId"
-                                                    value={formData.nationalId}
-                                                    onChange={handleChange}
-                                                    required
-                                                    className="w-full bg-gray-50 dark:bg-gray-800 border border-transparent focus:border-[#82D616] focus:bg-white dark:focus:bg-gray-800 px-5 py-4 rounded-xl outline-none transition text-gray-900 dark:text-white"
-                                                    placeholder="14 رقم"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-bold text-gray-700 dark:text-gray-300">المحافظة</label>
-                                                <select
-                                                    name="governorate"
-                                                    value={formData.governorate}
-                                                    onChange={handleChange}
-                                                    className="w-full bg-gray-50 dark:bg-gray-800 border border-transparent focus:border-[#82D616] focus:bg-white dark:focus:bg-gray-800 px-5 py-4 rounded-xl outline-none transition text-gray-900 dark:text-white"
-                                                >
-                                                    <option value="">اختر المحافظة...</option>
-                                                    {egyptianGovernorates.map((gov) => (
-                                                        <option key={gov} value={gov}>{gov}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        {howDidYouHearJSX}
                                     </div>
                                 )}
 

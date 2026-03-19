@@ -1,34 +1,36 @@
-
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { auctionApi, horseApi, studApi, adminApi, joinApi } from '../api/api';
 
 // --- بيانات المرابط وفروعها المتاحة للخيول ---
 const studsData = {
-  'الشحانية':['الفرع الرئيسي', 'فرع الريان'],
-  'مربط العرب':['فرع القاهرة', 'فرع الإسكندرية', 'فرع الجيزة'],
-  'إسطبلات نجد':['الفرع الرئيسي', 'فرع الجيزة', 'فرع زايد'],
-  'مربط الريان':['الفرع الرئيسي', 'فرع الإسكندرية'],
-  'مربط البادية':['فرع الجيزة', 'فرع الفيوم', 'فرع سقارة'],
-  'مزرعة رباب':['الفرع الرئيسي', 'فرع سقارة'],
-  'مربط صقر':['الفرع الرئيسي', 'فرع المنصورية'],
-  'أخرى':['الفرع الرئيسي']
+  'الشحانية': ['ال الفرع الرئيسي', 'فرع الريان'],
+  'مربط العرب': ['فرع القاهرة', 'فرع الإسكندرية', 'فرع الجيزة'],
+  'إسطبلات نجد': ['الفرع الرئيسي', 'فرع الجيزة', 'فرع زايد'],
+  'مربط الريان': ['الفرع الرئيسي', 'فرع الإسكندرية'],
+  'مربط البادية': ['فرع الجيزة', 'فرع الفيوم', 'فرع سقارة'],
+  'مزرعة رباب': ['الفرع الرئيسي', 'فرع سقارة'],
+  'مربط صقر': ['الفرع الرئيسي', 'فرع المنصورية'],
+  'أخرى': ['الفرع الرئيسي']
 };
 
 // --- قائمة محافظات مصر (لإضافة المرابط) ---
-const egyptGovernorates =[
-  'القاهرة', 'الجيزة', 'الإسكندرية', 'الدقهلية', 'الشرقية', 'المنوفية', 'القليوبية', 
-  'البحيرة', 'الغربية', 'بورسعيد', 'دمياط', 'الإسماعيلية', 'السويس', 'كفر الشيخ', 
-  'الفيوم', 'بني سويف', 'مطروح', 'شمال سيناء', 'جنوب سيناء', 'المنيا', 'أسيوط', 
+const egyptGovernorates = [
+  'القاهرة', 'الجيزة', 'الإسكندرية', 'الدقهلية', 'الشرقية', 'المنوفية', 'القليوبية',
+  'البحيرة', 'الغربية', 'بورسعيد', 'دمياط', 'الإسماعيلية', 'السويس', 'كفر الشيخ',
+  'الفيوم', 'بني سويف', 'مطروح', 'شمال سيناء', 'جنوب سيناء', 'المنيا', 'أسيوط',
   'سوهاج', 'قنا', 'البحر الأحمر', 'الأقصر', 'أسوان', 'الوادى الجديد'
 ];
 
-export default function Dashboard() {
+export default function AdminDashboard() {
+  const navigate = useNavigate();
+
   // ================= 1. States الأساسية للتنقل =================
-  const[activeSidebarPage, setActiveSidebarPage] = useState('dashboard');
-  const[activeTab, setActiveTab] = useState('البائعين'); 
-  const[isDarkMode, setIsDarkMode] = useState(false);
-  
+  const [activeSidebarPage, setActiveSidebarPage] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('البائعين');
+
   // ================= 2. States الإشعارات =================
-  const[isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const notifRef = useRef(null);
 
   useEffect(() => {
@@ -37,135 +39,169 @@ export default function Dashboard() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  },[]);
+  }, []);
 
   // ================= 3. States الفلترة والبحث =================
-  const[searchQuery, setSearchQuery] = useState('');
-  const[filterStatus, setFilterStatus] = useState('الكل');
-  const[isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('الكل');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef(null);
 
   useEffect(() => {
     setFilterStatus('الكل');
     setSearchQuery('');
-  },[activeTab, activeSidebarPage]);
+  }, [activeTab, activeSidebarPage]);
 
   // ================= 4. قواعد البيانات (States) =================
-  const[sellersData, setSellersData] = useState([
-    { id: 'ORD-#5241', seller: 'فهد العتيبي', phone: '+966 50 111 1111', email: 'fahad@example.com', status: 'مكتمل' },
-    { id: 'ORD-#5242', seller: 'مربط الصقور', phone: '+966 50 222 2222', email: 'saqour@example.com', status: 'قيد الانتظار' },
-    { id: 'ORD-#5243', seller: 'سارة الشمري', phone: '+966 50 333 3333', email: 'sara@example.com', status: 'ملغى' },
-    { id: 'ORD-#5244', seller: 'خالد منصور', phone: '+966 50 444 4444', email: 'khaled@example.com', status: 'مكتمل' }
-  ]);
+  const [sellersData, setSellersData] = useState([]);
+  const [buyersData, setBuyersData] = useState([]);
+  const [vetsData, setVetsData] = useState([]);
+  const [ordersData, setOrdersData] = useState([]);
+  const [horsesData, setHorsesData] = useState([]);
+  const [medicalRecordsData, setMedicalRecordsData] = useState([]);
+  const [studsDataList, setStudsDataList] = useState([]);
+  const [auctionsDataList, setAuctionsDataList] = useState([]);
+  const [registrationRequests, setRegistrationRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const[buyersData, setBuyersData] = useState([
-    { id: 'b1', orderId: 'ORD-#6001', initial: 'أ', name: 'أحمد محمد', phone: '+966501234567', email: 'ahmed@example.com', orders: '٥ خيول', status: 'مكتمل' },
-    { id: 'b2', orderId: 'ORD-#6002', initial: 'س', name: 'سارة علي', phone: '+966551234567', email: 'sara@example.com', orders: '٢ خيول', status: 'ملغى' },
-    { id: 'b3', orderId: 'ORD-#6003', initial: 'خ', name: 'خالد عبدالله', phone: '+966561234567', email: 'khaled@example.com', orders: '٠ خيول', status: 'قيد الانتظار' },
-    { id: 'b4', orderId: 'ORD-#6004', initial: 'ن', name: 'نورة يوسف', phone: '+966541234567', email: 'noura@example.com', orders: '٨ خيول', status: 'مكتمل' }
-  ]);
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [usersRes, studsRes, horsesRes, auctionsRes, requestsRes] = await Promise.all([
+        adminApi.getUsers(),
+        studApi.getAll(),
+        horseApi.getHorses(),
+        auctionApi.getAuctions(),
+        joinApi.getNotifications()
+      ]);
 
-  const[vetsData, setVetsData] = useState([
-    { id: 'v1', orderId: 'ORD-#7001', initial: 'أ', name: 'د. أحمد علي', license: 'VET-001#', specialty: 'جراحة الخيول', email: 'ahmed@vet.com', phone: '+966 50 123 4567', status: 'مكتمل' },
-    { id: 'v2', orderId: 'ORD-#7002', initial: 'س', name: 'د. سارة حسن', license: 'VET-002#', specialty: 'تغذية الخيول', email: 'sara@vet.com', phone: '+966 50 234 5678', status: 'مكتمل' },
-    { id: 'v3', orderId: 'ORD-#7003', initial: 'م', name: 'د. محمد محمود', license: 'VET-003#', specialty: 'طب الطوارئ', email: 'mohammad@vet.com', phone: '+966 50 345 6789', status: 'قيد الانتظار' }
-  ]);
+      const allUsers = usersRes.data || [];
+      setSellersData(allUsers.filter(u => u.Role === 'Owner' || u.role === 'Owner' || u.Role === 'Seller' || u.role === 'Seller').map(u => ({
+        ...u,
+        id: u.Id || u.id,
+        seller: u.FullName || u.fullName,
+        phone: u.PhoneNumber || u.phoneNumber,
+        status: 'نشط'
+      })));
+      setBuyersData(allUsers.filter(u => u.Role === 'Buyer' || u.role === 'Buyer').map(u => ({
+        ...u,
+        id: u.Id || u.id,
+        name: u.FullName || u.fullName,
+        phone: u.PhoneNumber || u.phoneNumber,
+        status: 'نشط'
+      })));
+      setVetsData(allUsers.filter(u => u.Role === 'EquineVet' || u.role === 'EquineVet').map(u => ({
+        ...u,
+        id: u.Id || u.id,
+        name: u.FullName || u.fullName,
+        phone: u.PhoneNumber || u.phoneNumber,
+        status: 'نشط'
+      })));
 
-  const[ordersData, setOrdersData] = useState([
-    { id: 'ORD-9001', horse: 'نجم', type: 'شراء', amount: '١٥٠,٠٠٠ ر.س', date: '2023/11/01', status: 'قيد المراجعة' },
-    { id: 'ORD-9002', horse: 'أصيل', type: 'فحص طبي', amount: '٥,٠٠٠ ر.س', date: '2023/11/02', status: 'مكتمل' }
-  ]);
+      setStudsDataList((studsRes.data || []).map(s => {
+        const rawImg = s.ImageUrl || s.imageUrl || s.image;
+        let finalImg = 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?auto=format&fit=crop&q=80&w=200';
+        if (rawImg) {
+          if (rawImg.startsWith('http') || rawImg.startsWith('/')) {
+            finalImg = rawImg;
+          } else {
+            finalImg = `/uploads/studs/${rawImg}`;
+          }
+        }
+        return {
+          ...s,
+          id: s.StudId || s.Id || s.id,
+          name: s.NameArabic || s.Name || s.name,
+          image: finalImg,
+          status: 'نشط'
+        };
+      }));
 
-  const[horsesData, setHorsesData] = useState([
-    { id: 'HRS-101', image: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=100&h=100&fit=crop', name: 'البراق', breed: 'عربي أصيل', age: '٤ سنوات', color: 'أشقر', owner: 'فهد العتيبي', status: 'متاح للبيع', type: 'فحل', sire: 'نجم الدين', dam: 'الريم', breeder: 'مربط العتيبي', studName: 'أخرى', branch: 'الفرع الرئيسي', healthRecordPdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', pedigreeImg: 'https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=400' },
-    { id: 'HRS-102', image: 'https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=100&h=100&fit=crop', name: 'الريم', breed: 'إنجليزي', age: '٣ سنوات', color: 'أسود', owner: 'مربط الصقور', status: 'مباع', type: 'فرس', sire: 'غير معروف', dam: 'غير معروف', breeder: 'مربط الصقور', studName: 'مربط صقر', branch: 'الفرع الرئيسي', healthRecordPdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', pedigreeImg: 'https://images.unsplash.com/photo-1534005081014-99d75b33190e?w=400' },
-    { id: 'HRS-103', image: 'https://images.unsplash.com/photo-1534005081014-99d75b33190e?w=100&h=100&fit=crop', name: 'سيف', breed: 'هجين', age: '٥ سنوات', color: 'رمادي', owner: 'فيصل الراجحي', status: 'تحت العلاج', type: 'فحل', sire: 'شواش', dam: 'حلا', breeder: 'الراجحي', studName: 'إسطبلات نجد', branch: 'فرع زايد', healthRecordPdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', pedigreeImg: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=400' }
-  ]);
+      setHorsesData((horsesRes.data || []).map(h => {
+        const rawImg = h.ImageUrl || h.imageUrl || h.image;
+        let finalImg = 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?auto=format&fit=crop&q=80&w=200';
+        if (rawImg) {
+          if (rawImg.startsWith('http') || rawImg.startsWith('/')) {
+            finalImg = rawImg;
+          } else if (rawImg.startsWith('horses/')) {
+            finalImg = `/${rawImg}`; // From public/horses/
+          } else {
+            finalImg = `/uploads/horses/${rawImg}`;
+          }
+        }
+        return {
+          ...h,
+          id: h.MicrochipId || h.microchipId || h.Id || h.id || (h.MicrochipId === 0 ? 0 : 'غير معروف'),
+          name: h.Name || h.name,
+          image: finalImg,
+          status: h.IsApproved ? 'مقبول' : 'قيد الانتظار'
+        };
+      }));
 
-  const[medicalRecordsData, setMedicalRecordsData] = useState([
-    { id: 'MED-501', horseName: 'البراق', vetName: 'د. أحمد علي', date: '2023/10/20', type: 'فحص دوري', diagnosis: 'سليم تماماً', status: 'مكتمل' },
-    { id: 'MED-502', horseName: 'سيف', vetName: 'د. سارة حسن', date: '2023/11/05', type: 'علاج إصابة', diagnosis: 'إصابة في الحافر الأيمن', status: 'قيد العلاج' }
-  ]);
+      setAuctionsDataList((auctionsRes.data || []).map(a => {
+        const rawImg = a.ImageUrl || a.imageUrl || a.image;
+        let finalImg = 'https://images.unsplash.com/photo-1551884170-09fb70a3a2ed?auto=format&fit=crop&q=80&w=200';
+        if (rawImg) {
+          if (rawImg.startsWith('http') || rawImg.startsWith('/')) {
+            finalImg = rawImg;
+          } else if (rawImg.startsWith('auctions/')) {
+            finalImg = `/${rawImg}`; // From public/auctions/
+          } else {
+            finalImg = `/uploads/auctions/${rawImg}`;
+          }
+        }
+        return {
+          ...a,
+          id: a.Id || a.id,
+          title: a.Name || a.name,
+          image: finalImg,
+          status: a.Status || 'نشط'
+        };
+      }));
 
-  const[studsDataList, setStudsDataList] = useState([
-    { id: 'S1', name: 'إسطبلات الدوحة الملكية', nameEn: 'Doha Stud', type: 'تدريب وبيع', image: 'https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=100&h=100&fit=crop', email: 'doha.stud@gmail.com', phone: '+974 1234 5678', city: 'القاهرة', regNo: '14', foundedDate: '2010-01-01', status: 'نشط' },
-    { id: 'S2', name: 'مربط العرب', nameEn: 'Arab Stud', type: 'تدريب', image: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=100&h=100&fit=crop', email: 'arab.stud@hotmail.com', phone: '+966 50 123 4567', city: 'الجيزة', regNo: '68', foundedDate: '2015-05-20', status: 'نشط' }
-  ]);
+      setRegistrationRequests((requestsRes.data || []).map(r => ({
+        id: r.id,
+        ...r.request,
+        fullName: r.request?.FullName || r.request?.fullName,
+        email: r.request?.Email || r.request?.email,
+        phoneNumber: r.request?.PhoneNumber || r.request?.phoneNumber,
+        nationalId: r.request?.NationalId || r.request?.nationalId,
+        type: r.request?.Role === 'EquineVet' ? 'طبيب بيطري' : r.request?.Role === 'Seller' ? 'بائع' : 'مشتري',
+        status: 'قيد الانتظار',
+        date: new Date().toLocaleDateString('ar-EG')
+      })));
 
-  // --- داتا المزادات الجديدة ---
-  const[auctionsDataList, setAuctionsDataList] = useState([
-    { id: 'AUC-1', title: 'مزاد إيجي هورسياس الماسي', startDate: '2025-10-12', endDate: '2025-10-13', location: 'القاهرة - مصر', description: 'مزاد كبير لبيع أفضل الخيول العربية الأصيلة.', status: 'قيد الانتظار', image: 'https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=100&h=100&fit=crop' },
-    { id: 'AUC-2', title: 'بطولة المراسم رباب', startDate: '2025-10-09', endDate: '2025-10-10', location: 'مربط رباب - الجيزة', description: 'بطولة خاصة بعرض أجمل الخيول العربية برعاية دولية.', status: 'مكتمل', image: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=100&h=100&fit=crop' },
-    { id: 'AUC-3', title: 'North Coast Championship', startDate: '2025-07-10', endDate: '2025-07-12', location: 'الساحل الشمالي', description: 'البطولة الصيفية السنوية لجمال الخيل العربية في الساحل الشمالي.', status: 'مكتمل', image: 'https://images.unsplash.com/photo-1534005081014-99d75b33190e?w=100&h=100&fit=crop' }
-  ]);
-
-  // ================= 5. بيانات الإعدادات والحفظ =================
-  const[adminData, setAdminData] = useState({ 
-    name: 'أفنان احمد', 
-    email: 'admin@horse-system.com',
-    phone: '+20 100 000 0000',
-    password: 'password123' // كلمة المرور الافتراضية للتجربة
-  });
-  const[settingsInput, setSettingsInput] = useState({ 
-    name: adminData.name, 
-    email: adminData.email,
-    phone: adminData.phone,
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-  const[saveStatus, setSaveStatus] = useState('idle');
-  const[isPasswordChangeOpen, setIsPasswordChangeOpen] = useState(false);
-
-  const handleSaveSettings = () => {
-    // التحقق من صحة كلمة المرور إذا كان بطاقة تغيير كلمة المرور مفتوحة وهناك محاولة لتغييرها
-    if (isPasswordChangeOpen && (settingsInput.newPassword || settingsInput.confirmPassword || settingsInput.currentPassword)) {
-      if (settingsInput.currentPassword !== adminData.password) {
-        alert('كلمة المرور الحالية غير صحيحة');
-        return;
-      }
-      if (settingsInput.newPassword !== settingsInput.confirmPassword) {
-        alert('كلمة المرور الجديدة وتأكيدها غير متطابقين');
-        return;
-      }
-      if (settingsInput.newPassword.length < 6) {
-        alert('كلمة المرور الجديدة يجب أن تتكون من ٦ أحرف/أرقام على الأقل');
-        return;
-      }
-      // تحديث كل البيانات بالإضافة لكلمة المرور الجديدة
-      setAdminData({ 
-        name: settingsInput.name, 
-        email: settingsInput.email, 
-        phone: settingsInput.phone,
-        password: settingsInput.newPassword 
-      });
-      setIsPasswordChangeOpen(false);
-    } else {
-      // تحديث البيانات بدون تغيير كلمة المرور
-      setAdminData({ 
-        name: settingsInput.name, 
-        email: settingsInput.email, 
-        phone: settingsInput.phone,
-        password: adminData.password 
-      });
+    } catch (error) {
+      console.error("Error fetching admin data:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    setSaveStatus('saved');
-    setTimeout(() => setSaveStatus('idle'), 2000);
-
-    // تصفير حقول كلمة المرور بعد الحفظ
-    setSettingsInput(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
   };
 
-  // ================= 6. دوال البحث والفلترة =================
+  useEffect(() => {
+    const userRole = localStorage.getItem('userRole');
+    const isAdmin = userRole === 'Admin' || userRole === 'admin';
+    if (!isAdmin) {
+      navigate('/');
+      return;
+    }
+    fetchData();
+  }, []);
+
+  const updateStudsDataList = (newList) => { setStudsDataList(newList); };
+  const updateHorsesData = (newList) => { setHorsesData(newList); };
+  const updateAuctionsDataList = (newList) => { setAuctionsDataList(newList); };
+
+
+  // ================= 5. دوال البحث والفلترة =================
   const getProcessedData = () => {
-    let data =[];
+    let data = [];
     if (activeSidebarPage === 'orders') data = ordersData;
     else if (activeSidebarPage === 'horses') data = horsesData;
     else if (activeSidebarPage === 'studs') data = studsDataList;
     else if (activeSidebarPage === 'auctions') data = auctionsDataList;
     else if (activeSidebarPage === 'medical') data = medicalRecordsData;
-    else if (activeSidebarPage === 'settings') return[]; 
+    else if (activeSidebarPage === 'requests') data = registrationRequests;
     else data = activeTab === 'البائعين' ? sellersData : activeTab === 'المشترين' ? buyersData : vetsData;
 
     return data.filter(item => {
@@ -178,65 +214,166 @@ export default function Dashboard() {
 
   const handleDownloadCSV = () => {
     if (processedData.length === 0) return alert("لا توجد بيانات لتحميلها");
-    const headers = Object.keys(processedData[0]).filter(k => k !== 'image' && k !== 'initial').join(',');
-    const rows = processedData.map(row => Object.entries(row).filter(([k]) => k !== 'image' && k !== 'initial').map(([_, v]) => `"${v}"`).join(',')).join('\n');
+    const headers = Object.keys(processedData[0]).filter(k => k !== 'image' && k !== 'initial' && k !== 'files').join(',');
+    const rows = processedData.map(row => Object.entries(row).filter(([k]) => k !== 'image' && k !== 'initial' && k !== 'files').map(([_, v]) => `"${v}"`).join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + headers + '\n' + rows], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a'); link.href = url; 
+    const link = document.createElement('a'); link.href = url;
     let fileName = activeTab;
-    if(activeSidebarPage === 'orders') fileName = 'Orders';
-    if(activeSidebarPage === 'horses') fileName = 'Horses';
-    if(activeSidebarPage === 'studs') fileName = 'Studs';
-    if(activeSidebarPage === 'auctions') fileName = 'Auctions';
-    if(activeSidebarPage === 'medical') fileName = 'Medical_Records';
+    if (activeSidebarPage === 'orders') fileName = 'Orders';
+    if (activeSidebarPage === 'horses') fileName = 'Horses';
+    if (activeSidebarPage === 'studs') fileName = 'Studs';
+    if (activeSidebarPage === 'auctions') fileName = 'Auctions';
+    if (activeSidebarPage === 'medical') fileName = 'Medical_Records';
+    if (activeSidebarPage === 'requests') fileName = 'Registration_Requests';
     link.setAttribute('download', `${fileName}.csv`);
     document.body.appendChild(link); link.click(); document.body.removeChild(link);
   };
 
   const getOrderStatusStyle = (status) => {
-    if(status === 'مكتمل' || status === 'متاح للبيع' || status === 'سليم' || status === 'نشط') return 'bg-green-100 text-green-600';
-    if(status === 'قيد الانتظار' || status === 'قيد المراجعة' || status === 'قيد العلاج' || status === 'تحت العلاج') return 'bg-yellow-100 text-yellow-600';
-    if(status === 'ملغى' || status === 'مباع' || status === 'غير نشط') return 'bg-red-100 text-red-600';
+    if (status === 'مكتمل' || status === 'متاح للبيع' || status === 'سليم' || status === 'نشط' || status === 'مقبول') return 'bg-green-100 text-green-600';
+    if (status === 'قيد الانتظار' || status === 'قيد المراجعة' || status === 'قيد العلاج' || status === 'تحت العلاج') return 'bg-yellow-100 text-yellow-600';
+    if (status === 'ملغى' || status === 'مباع' || status === 'غير نشط' || status === 'مرفوض') return 'bg-red-100 text-red-600';
     return 'bg-gray-100 text-gray-600';
   };
 
   const getUserStatusStyle = (status) => status === 'نشط' ? 'bg-green-50 text-green-500 border border-green-100' : 'bg-gray-100 text-gray-500 border border-gray-200';
 
-  // ================= 7. نظام الـ Modal =================
-  const[modalConfig, setModalConfig] = useState({ isOpen: false, type: '', data: null });
-  const[formData, setFormData] = useState({});
-  
-  const[currentStep, setCurrentStep] = useState(1);
-  const [slideDirection, setSlideDirection] = useState('forward');
-  const[formErrors, setFormErrors] = useState({});
+  // ================= 6. نظام الـ Modal =================
+  const [modalConfig, setModalConfig] = useState({ isOpen: false, type: '', data: null });
+  const [formData, setFormData] = useState({});
 
-  const openModal = (type, data = null) => { 
-    setModalConfig({ isOpen: true, type, data }); 
-    if(activeSidebarPage === 'studs' && (type === 'add' || type === 'edit')) {
-      setFormData(data ? { ...data, images:[] } : { country: 'مصر', images:[] });
+  const [currentStep, setCurrentStep] = useState(1);
+  const [slideDirection, setSlideDirection] = useState('forward');
+  const [formErrors, setFormErrors] = useState({});
+
+  const normalizeData = (data) => {
+    if (!data) return {};
+    const normalized = {};
+    Object.keys(data).forEach(key => {
+      const camelCaseKey = key.charAt(0).toLowerCase() + key.slice(1);
+      normalized[camelCaseKey] = data[key];
+    });
+    return { ...normalized, ...data }; // Keep both for safety
+  };
+
+  const openModal = (type, data = null) => {
+    setModalConfig({ isOpen: true, type, data });
+    const normalized = normalizeData(data);
+
+    if (activeSidebarPage === 'studs' && (type === 'add' || type === 'edit')) {
+      setFormData(data ? { ...data, images: [], branches: data.branches || [] } : { country: 'مصر', images: [], branches: [] });
+      setCurrentStep(1);
+      setFormErrors({});
+    } else if (activeSidebarPage === 'auctions' && (type === 'add' || type === 'edit')) {
+      setFormData(data ? { ...data, venues: data.venues || [{ studName: '', branch: '', horseIds: [] }] } : { venues: [{ studName: '', branch: '', horseIds: [] }] });
       setCurrentStep(1);
       setFormErrors({});
     } else {
-      setFormData(data || {}); 
+      setFormData(data || {});
     }
   };
-  
-  const closeModal = () => { 
-    setModalConfig({ isOpen: false, type: '', data: null }); 
-    setFormData({}); 
+
+  const closeModal = () => {
+    setModalConfig({ isOpen: false, type: '', data: null });
+    setFormData({});
     setCurrentStep(1);
     setFormErrors({});
+  };
+
+  const addOrUpdateUserFromRequest = (req, status) => {
+    const base = { ...req, status };
+
+    const addToList = (setter, item) => setter(prev => [item, ...prev]);
+
+    if (req.type === 'بائع' || req.role === 'Seller') {
+      addToList(setSellersData, {
+        ...base,
+        id: `ORD-#${Math.floor(1000 + Math.random() * 9000)}`,
+        seller: req.fullName,
+        phone: req.phoneNumber,
+        email: req.email
+      });
+    } else if (req.type === 'مشتري' || req.role === 'Buyer') {
+      addToList(setBuyersData, {
+        ...base,
+        id: `b${Date.now()}`,
+        orderId: `ORD-#${Math.floor(1000 + Math.random() * 9000)}`,
+        initial: req.fullName ? req.fullName.charAt(0) : 'م',
+        name: req.fullName,
+        phone: req.phoneNumber,
+        email: req.email
+      });
+    } else if (req.type === 'طبيب بيطري' || req.role === 'EquineVet') {
+      addToList(setVetsData, {
+        ...base,
+        id: `v${Date.now()}`,
+        orderId: `ORD-#${Math.floor(1000 + Math.random() * 9000)}`,
+        initial: req.fullName ? req.fullName.replace('د. ', '').charAt(0) : 'ط',
+        name: req.fullName,
+        phone: req.phoneNumber,
+        email: req.email
+      });
+    } else if (req.type === 'مربط' || req.role === 'Stud') {
+      updateStudsDataList(prev => [{
+        ...base,
+        id: `S${Math.floor(100 + Math.random() * 900)}`,
+        name: req.fullName,
+        img: 'https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=100&h=100&fit=crop',
+        type: 'تدريب وبيع',
+        status: 'نشط',
+        stats: { offspring: 0, mares: 0, stallions: 0, regNo: req.commercialRegister || '' },
+        branches: req.branches || [],
+        about: req.about || ''
+      }, ...prev]);
+    } else if (req.type === 'حصان' || req.role === 'Horse') {
+      updateHorsesData(prev => [{
+        ...base,
+        id: `HRS-${Math.floor(100 + Math.random() * 900)}`,
+        name: req.name,
+        image: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=100&h=100&fit=crop'
+      }, ...prev]);
+    }
+  };
+
+  const handleRequestAction = async (id, newStatus) => {
+    setIsLoading(true);
+    try {
+      if (newStatus === 'مرفوض') {
+        await joinApi.deny(id);
+      } else {
+        const request = registrationRequests.find(r => r.id === id);
+        if (request?.horseRequest || request?.type === 'طلب تسجيل خيل') {
+          await joinApi.approveHorse(id);
+        } else {
+          await joinApi.approve(id);
+        }
+      }
+      // Refresh all data from the server
+      await fetchData();
+      if (modalConfig.isOpen) closeModal();
+    } catch (error) {
+      console.error("Error processing request:", error);
+      alert("حدث خطأ أثناء معالجة الطلب.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (e) => {
     const { name, value, type, files } = e.target;
     if (type === 'file') {
       if (files && files[0]) {
-        if (name === 'healthRecordPdf') setFormData({ ...formData,[name]: files[0] });
-        else setFormData({ ...formData, [name]: URL.createObjectURL(files[0]) });
+        // Store the actual file object for submission
+        setFormData(prev => ({
+          ...prev,
+          [name]: files[0],
+          // Also store a preview URL for UI display if it's an image
+          [`${name}Preview`]: files[0].type.startsWith('image/') ? URL.createObjectURL(files[0]) : null
+        }));
       }
     } else {
-      setFormData({ ...formData,[name]: value });
+      setFormData({ ...formData, [name]: value });
     }
   };
 
@@ -245,24 +382,97 @@ export default function Dashboard() {
     setFormData({ ...formData, studName: selectedStud, branch: '' });
   };
 
+  const normalize = (str) => typeof str === 'string' ? str.trim().replace(/\s+/g, ' ') : '';
+
+  const getBranchesForStud = (studName) => {
+    if (!studName) return [];
+    const normalizedStud = normalize(studName);
+
+    // 1) Branches coming from existing horses in that stud
+    const branchesFromHorses = Array.from(new Set(
+      horsesData
+        .filter(h => normalize(h.studName) === normalizedStud)
+        .map(h => normalize(h.branch))
+    )).filter(Boolean);
+    if (branchesFromHorses.length > 0) return branchesFromHorses;
+
+    // 2) Branches defined on the stud object (added/edited via admin)
+    const stud = studsDataList.find(s => normalize(s.name) === normalizedStud);
+    if (stud?.branches?.length > 0) {
+      return stud.branches.map(normalize).filter(Boolean);
+    }
+
+    // 3) Fallback to the hardcoded branches list (if available)
+    return (studsData[studName] || []).map(normalize).filter(Boolean);
+  };
+
+  const getHorsesForVenue = (venue) => {
+    if (!venue?.studName || !venue?.branch) return [];
+    const normalizedStud = normalize(venue.studName);
+    const normalizedBranch = normalize(venue.branch);
+    return horsesData.filter(h => normalize(h.studName) === normalizedStud && normalize(h.branch) === normalizedBranch);
+  };
+
+  const updateAuctionVenue = (index, field, value) => {
+    setFormData(prev => {
+      const venues = [...(prev.venues || [])];
+      venues[index] = { ...venues[index], [field]: value };
+      if (field === 'studName') {
+        venues[index].branch = '';
+        venues[index].horseIds = [];
+      }
+      if (field === 'branch') {
+        venues[index].horseIds = [];
+      }
+      return { ...prev, venues };
+    });
+  };
+
+  const addAuctionVenue = () => {
+    setFormData(prev => ({
+      ...prev,
+      venues: [...(prev.venues || []), { studName: '', branch: '', horseIds: [] }]
+    }));
+  };
+
+  const removeAuctionVenue = (index) => {
+    setFormData(prev => {
+      const venues = [...(prev.venues || [])];
+      venues.splice(index, 1);
+      return { ...prev, venues };
+    });
+  };
+
   const handleNextStep = (e) => {
     e.preventDefault();
     let errors = {};
-    if (currentStep === 1) {
-        if (!formData.nameEn?.trim() && modalConfig.type !== 'edit') errors.nameEn = true; 
+
+    if (activeSidebarPage === 'studs') {
+      if (currentStep === 1) {
+        if (!formData.nameEn?.trim() && modalConfig.type !== 'edit') errors.nameEn = true;
         if (!formData.name?.trim()) errors.name = true;
         if (!formData.foundedDate) errors.foundedDate = true;
         if (!formData.city) errors.city = true;
-        if (!formData.regNo?.trim()) errors.regNo = true; 
+        if (!formData.regNo?.trim()) errors.regNo = true;
         if (!formData.type) errors.type = true;
-    } else if (currentStep === 2) {
+      } else if (currentStep === 2) {
         if (!formData.email?.trim()) errors.email = true;
         if (!formData.phone?.trim()) errors.phone = true;
+      }
     }
+
+    if (activeSidebarPage === 'auctions' && currentStep === 1) {
+      if (!formData.title?.trim()) errors.title = true;
+      if (!formData.startDate) errors.startDate = true;
+      if (!formData.endDate) errors.endDate = true;
+      if (!formData.location?.trim()) errors.location = true;
+      if (!formData.description?.trim()) errors.description = true;
+    }
+
     if (Object.keys(errors).length > 0) { setFormErrors(errors); return; }
-    
-    setFormErrors({}); 
-    setSlideDirection('forward'); 
+
+    setFormErrors({});
+    setSlideDirection('forward');
     setCurrentStep(prev => prev + 1);
   };
 
@@ -272,75 +482,174 @@ export default function Dashboard() {
     setCurrentStep(prev => prev - 1);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (activeSidebarPage === 'studs') {
-      if (modalConfig.type === 'add' && (!formData.images || formData.images.length === 0)) {
-        setFormErrors({ images: true });
-        alert('يرجى رفع صورة واحدة على الأقل للمربط لحفظ البيانات');
-        return;
+    setIsLoading(true);
+
+    try {
+      if (activeSidebarPage === 'studs') {
+        const studForm = new FormData();
+        // Mandatory fields
+        studForm.append('NameArabic', formData.name);
+        studForm.append('NameEnglish', formData.nameEn);
+        studForm.append('FoundedDate', formData.foundedDate);
+        studForm.append('RegistrationNumber', formData.regNo);
+        studForm.append('Type', formData.type);
+        studForm.append('City', formData.city);
+        studForm.append('Email', formData.email);
+        studForm.append('PhoneNumber', formData.phone);
+
+        // Optional fields
+        if (formData.about) studForm.append('About', formData.about);
+        if (formData.facebook) studForm.append('FacebookUrl', formData.facebook);
+        if (formData.instagram) studForm.append('InstagramUrl', formData.instagram);
+        if (formData.youtube) studForm.append('YoutubeUrl', formData.youtube);
+        if (formData.twitter) studForm.append('TwitterUrl', formData.twitter);
+        if (formData.videoUrl) studForm.append('VideoUrl', formData.videoUrl);
+        if (formData.lat) studForm.append('Latitude', formData.lat);
+        if (formData.lng) studForm.append('Longitude', formData.lng);
+
+        // Branches
+        if (formData.branches && formData.branches.length > 0) {
+          formData.branches.forEach((b, i) => studForm.append(`Branches[${i}]`, b));
+        }
+
+        // Image file
+        if (formData.image instanceof File) {
+          studForm.append('ImageFile', formData.image);
+        } else if (formData.images && formData.images[0] instanceof File) {
+          studForm.append('ImageFile', formData.images[0]);
+        }
+
+        if (modalConfig.type === 'add') {
+          await studApi.create(studForm);
+        } else {
+          await studApi.update(formData.id, studForm);
+        }
+      } else if (activeSidebarPage === 'auctions') {
+        const auctionPayload = {
+          Name: formData.title,
+          StartDate: formData.startDate,
+          EndDate: formData.endDate,
+          Location: formData.location,
+          Description: formData.description,
+          Status: formData.status || 'نشط'
+        };
+
+        if (modalConfig.type === 'add') {
+          await auctionApi.createAuction(auctionPayload);
+        } else {
+          await adminApi.updateAuction(formData.id, auctionPayload);
+        }
+      } else if (activeSidebarPage === 'horses') {
+        const horseForm = new FormData();
+        horseForm.append('Name', formData.name);
+        horseForm.append('Color', formData.color);
+        horseForm.append('Age', formData.age);
+        horseForm.append('Breeder', formData.breeder);
+        horseForm.append('Owner', formData.owner);
+        horseForm.append('Status', formData.status);
+        horseForm.append('StudName', formData.studName);
+        horseForm.append('Branch', formData.branch);
+        horseForm.append('Type', formData.type);
+        horseForm.append('Breed', formData.breed);
+        horseForm.append('Sire', formData.sire);
+        horseForm.append('Dam', formData.dam);
+
+        if (formData.image instanceof File) horseForm.append('ImageFile', formData.image);
+        if (formData.pedigreeImg instanceof File) horseForm.append('PedigreeImageFile', formData.pedigreeImg);
+        if (formData.healthRecordPdf instanceof File) horseForm.append('HealthRecordFile', formData.healthRecordPdf);
+
+        if (modalConfig.type === 'add') {
+          await horseApi.createHorse(horseForm);
+        } else {
+          await adminApi.updateHorse(formData.id || formData.microchipId, horseForm);
+        }
+      } else if (activeSidebarPage === 'dashboard' || activeSidebarPage === 'requests') {
+        if (modalConfig.type === 'add') {
+          const userForm = new FormData();
+          userForm.append('FullName', (activeTab === 'البائعين' ? formData.seller : formData.name) || formData.fullName);
+          userForm.append('Email', formData.email);
+          userForm.append('PhoneNumber', formData.phone);
+          userForm.append('NationalId', formData.nationalId);
+          userForm.append('Role', activeTab === 'البائعين' ? 'Seller' : activeTab === 'المشترين' ? 'Buyer' : 'EquineVet');
+          userForm.append('Password', 'Admin123!');
+          userForm.append('ConfirmPassword', 'Admin123!');
+
+          if (activeTab === 'البائعين') {
+            userForm.append('FarmName', formData.farmName);
+            userForm.append('SellerRole', formData.sellerRole);
+            userForm.append('CommercialRegister', formData.commercialRegister);
+            userForm.append('ExperienceYears', formData.experienceYears);
+            userForm.append('Address', formData.address);
+          } else if (activeTab === 'الأطباء البيطريين') {
+            userForm.append('License', formData.license);
+            userForm.append('Specialty', formData.specialty);
+            userForm.append('ExperienceYears', formData.experienceYears);
+            userForm.append('ClinicsWorkedAt', formData.clinicsWorkedAt);
+            userForm.append('VetBio', formData.vetBio);
+          }
+
+          await userApi.register(userForm);
+        } else {
+          const userUpdatePayload = {
+            FullName: (activeTab === 'البائعين' ? formData.seller : formData.name) || formData.fullName,
+            Email: formData.email,
+            PhoneNumber: formData.phone,
+            NationalId: formData.nationalId,
+            Role: formData.role,
+            Status: formData.status,
+            FarmName: formData.farmName,
+            SellerRole: formData.sellerRole,
+            CommercialRegister: formData.commercialRegister,
+            ExperienceYears: formData.experienceYears ? parseInt(formData.experienceYears) || 0 : null,
+            Address: formData.address,
+            CountryCity: formData.countryCity,
+            License: formData.license,
+            Specialty: formData.specialty,
+            ClinicsWorkedAt: formData.clinicsWorkedAt,
+            VetBio: formData.vetBio
+          };
+          await adminApi.updateUser(formData.id, userUpdatePayload);
+        }
       }
 
-      const finalImage = formData.images && formData.images.length > 0 
-        ? URL.createObjectURL(formData.images[0]) 
-        : formData.image || 'https://images.unsplash.com/photo-1598974357801-cbca100e65d3?w=100&h=100&fit=crop';
-
-      const newStudData = { ...formData, image: finalImage, status: formData.status || 'نشط' };
-
-      if (modalConfig.type === 'add') {
-        setStudsDataList([{ ...newStudData, id: `S${Math.floor(100 + Math.random() * 900)}` }, ...studsDataList]);
-      } else {
-        setStudsDataList(studsDataList.map(item => item.id === formData.id ? newStudData : item));
-      }
+      await fetchData();
       closeModal();
-      return;
+    } catch (error) {
+      console.error("Error submitting form:", error.response?.data || error.message);
+      alert("حدث خطأ أثناء حفظ البيانات. يرجى التأكد من المرفقات وصحة البيانات.");
+    } finally {
+      setIsLoading(false);
     }
-
-    if (activeSidebarPage === 'auctions') {
-      if (modalConfig.type === 'add') setAuctionsDataList([{ ...formData, id: `AUC-${Math.floor(100 + Math.random() * 900)}`, image: formData.image || 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=100&h=100&fit=crop', status: formData.status || 'قيد الانتظار' }, ...auctionsDataList]);
-      else setAuctionsDataList(auctionsDataList.map(item => item.id === formData.id ? formData : item));
-    } else if (activeSidebarPage === 'orders') {
-      if (modalConfig.type === 'add') setOrdersData([{ ...formData, id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`, date: new Date().toLocaleDateString('en-CA').replace(/-/g, '/') }, ...ordersData]);
-      else setOrdersData(ordersData.map(item => item.id === formData.id ? formData : item));
-    } else if (activeSidebarPage === 'horses') {
-      if (modalConfig.type === 'add') setHorsesData([{ ...formData, id: `HRS-${Math.floor(100 + Math.random() * 900)}`, image: formData.image || 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=100&h=100&fit=crop' }, ...horsesData]);
-      else setHorsesData(horsesData.map(item => item.id === formData.id ? formData : item));
-    } else if (activeSidebarPage === 'medical') {
-      if (modalConfig.type === 'add') setMedicalRecordsData([{ ...formData, id: `MED-${Math.floor(500 + Math.random() * 900)}`, date: new Date().toLocaleDateString('en-CA').replace(/-/g, '/') }, ...medicalRecordsData]);
-      else setMedicalRecordsData(medicalRecordsData.map(item => item.id === formData.id ? formData : item));
-    } else {
-      if (activeTab === 'البائعين') {
-        if (modalConfig.type === 'add') setSellersData([{ ...formData, id: `ORD-#${Math.floor(Math.random() * 10000)}` }, ...sellersData]);
-        else setSellersData(sellersData.map(item => item.id === formData.id ? formData : item));
-      } else if (activeTab === 'المشترين') {
-        if (modalConfig.type === 'add') setBuyersData([{ ...formData, id: `b${Date.now()}`, orderId: formData.orderId || `ORD-#${Math.floor(Math.random() * 10000)}`, initial: formData.name ? formData.name.charAt(0) : 'م', orders: formData.orders || '٠ خيول' }, ...buyersData]);
-        else setBuyersData(buyersData.map(item => item.id === formData.id ? formData : item));
-      } else if (activeTab === 'الأطباء البيطريين') {
-        if (modalConfig.type === 'add') setVetsData([{ ...formData, id: `v${Date.now()}`, orderId: formData.orderId || `ORD-#${Math.floor(Math.random() * 10000)}`, initial: formData.name ? formData.name.replace('د. ', '').charAt(0) : 'ط' }, ...vetsData]);
-        else setVetsData(vetsData.map(item => item.id === formData.id ? formData : item));
-      }
-    }
-    closeModal();
   };
 
-  const handleDelete = () => {
-    if (activeSidebarPage === 'orders') setOrdersData(ordersData.filter(item => item.id !== modalConfig.data.id));
-    else if (activeSidebarPage === 'horses') setHorsesData(horsesData.filter(item => item.id !== modalConfig.data.id));
-    else if (activeSidebarPage === 'studs') setStudsDataList(studsDataList.filter(item => item.id !== modalConfig.data.id));
-    else if (activeSidebarPage === 'auctions') setAuctionsDataList(auctionsDataList.filter(item => item.id !== modalConfig.data.id));
-    else if (activeSidebarPage === 'medical') setMedicalRecordsData(medicalRecordsData.filter(item => item.id !== modalConfig.data.id));
-    else {
-      if (activeTab === 'البائعين') setSellersData(sellersData.filter(item => item.id !== modalConfig.data.id));
-      if (activeTab === 'المشترين') setBuyersData(buyersData.filter(item => item.id !== modalConfig.data.id));
-      if (activeTab === 'الأطباء البيطريين') setVetsData(vetsData.filter(item => item.id !== modalConfig.data.id));
+  const handleDelete = async () => {
+    const id = modalConfig.data.id || modalConfig.data.Id || modalConfig.data.microchipId || modalConfig.data.MicrochipId;
+    if (!id) return alert("لا يمكن تحديد معرف السجل للحذف");
+
+    setIsLoading(true);
+    try {
+      if (activeSidebarPage === 'horses') await adminApi.deleteHorse(id);
+      else if (activeSidebarPage === 'studs') await studApi.remove(id);
+      else if (activeSidebarPage === 'auctions') await adminApi.deleteAuction(id);
+      else if (activeSidebarPage === 'requests') await joinApi.deny(id);
+      else {
+        await adminApi.deleteUser(id);
+      }
+      await fetchData();
+      closeModal();
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      alert("حدث خطأ أثناء الحذف. قد يكون السجل مرتبطاً ببيانات أخرى.");
+    } finally {
+      setIsLoading(false);
     }
-    closeModal();
   };
 
   return (
-    <div className={`flex h-screen bg-gray-50 overflow-hidden relative font-sans ${isDarkMode ? 'dark-mode-active' : ''}`} dir="rtl">
-      
+    <div className="flex h-screen bg-gray-50 overflow-hidden relative font-sans" dir="rtl">
+
       {/* ================= أكواد الـ CSS  ================= */}
       <style>{`
         @keyframes slideInForward { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
@@ -387,8 +696,8 @@ export default function Dashboard() {
       {/* ================= النافذة المنبثقة (Modal) ================= */}
       {modalConfig.isOpen && (
         <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className={`bg-white rounded-2xl shadow-2xl w-full max-h-[95vh] overflow-y-auto animate-fade-in-up custom-scrollbar ${((activeSidebarPage === 'studs') || (activeSidebarPage === 'horses' && modalConfig.type === 'edit')) ? 'max-w-5xl' : 'max-w-3xl'}`}>
-            
+          <div className={`bg-white rounded-2xl shadow-2xl w-full max-h-[95vh] overflow-y-auto animate-fade-in-up custom-scrollbar ${((activeSidebarPage === 'studs') || (activeSidebarPage === 'horses' && modalConfig.type === 'edit') || activeSidebarPage === 'requests' || activeSidebarPage === 'dashboard') ? 'max-w-5xl' : 'max-w-3xl'}`}>
+
             {/* عرض الحذف (موحد) */}
             {modalConfig.type === 'delete' && (
               <div className="text-center p-8 max-w-2xl mx-auto">
@@ -398,6 +707,108 @@ export default function Dashboard() {
                 <div className="flex gap-4 justify-center">
                   <button onClick={handleDelete} className="bg-red-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-600 transition shadow-md">نعم، تأكيد الحذف</button>
                   <button onClick={closeModal} className="bg-gray-100 text-gray-700 px-8 py-3 rounded-xl font-bold hover:bg-gray-200 transition">إلغاء الأمر</button>
+                </div>
+              </div>
+            )}
+
+            {/* ======================= عرض تفاصيل طلب التسجيل (والمستخدمين في لوحة التحكم) ======================= */}
+            {modalConfig.type === 'view' && (activeSidebarPage === 'requests' || activeSidebarPage === 'dashboard') && (
+              <div className="p-8">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-5 mb-6">
+                  <h2 className="text-2xl font-black flex items-center gap-3 text-gray-800">
+                    <div className="bg-emerald-50 w-12 h-12 rounded-full flex items-center justify-center text-emerald-600"><i className="fas fa-user-check"></i></div>
+                    تفاصيل السجل الشامل
+                  </h2>
+                  <span className={`px-4 py-1.5 rounded-full text-sm font-bold ${getOrderStatusStyle(modalConfig.data.status)}`}>{modalConfig.data.status}</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* البيانات الأساسية */}
+                  <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2"><i className="fas fa-id-card text-gray-400 ml-2"></i> البيانات الشخصية</h3>
+                    <div><span className="text-xs text-gray-500 block">الاسم الكامل</span><strong className="text-gray-800">{modalConfig.data.fullName || modalConfig.data.seller || modalConfig.data.name}</strong></div>
+                    <div><span className="text-xs text-gray-500 block">البريد الإلكتروني</span><strong className="text-gray-800 break-all" dir="ltr">{modalConfig.data.email}</strong></div>
+                    <div><span className="text-xs text-gray-500 block">رقم الهاتف</span><strong className="text-gray-800" dir="ltr">{modalConfig.data.phoneNumber || modalConfig.data.phone}</strong></div>
+                    <div><span className="text-xs text-gray-500 block">الرقم القومي</span><strong className="text-gray-800" dir="ltr">{modalConfig.data.nationalId || 'غير مسجل'}</strong></div>
+                    {modalConfig.data.howDidYouHear && <div><span className="text-xs text-gray-500 block">كيف تعرف علينا؟</span><strong className="text-gray-800">{modalConfig.data.howDidYouHear}</strong></div>}
+                  </div>
+
+                  {/* بيانات مخصصة حسب النوع */}
+                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                    <h3 className="text-lg font-bold text-emerald-700 mb-4 border-b border-gray-100 pb-2"><i className="fas fa-info-circle text-emerald-500 ml-2"></i> التفاصيل الإضافية</h3>
+
+                    {/* بيانات المشتري */}
+                    {(modalConfig.data.role === 'Buyer' || (activeSidebarPage === 'dashboard' && activeTab === 'المشترين')) && (
+                      <div><span className="text-xs text-gray-500 block">المحافظة</span><strong className="text-gray-800">{modalConfig.data.governorate || 'لم يحدد'}</strong></div>
+                    )}
+
+                    {/* بيانات البائع */}
+                    {(modalConfig.data.role === 'Seller' || (activeSidebarPage === 'dashboard' && activeTab === 'البائعين')) && (
+                      <>
+                        <div><span className="text-xs text-gray-500 block">اسم المزرعة / الإسطبل</span><strong className="text-gray-800">{modalConfig.data.farmName || 'غير مسجل'}</strong></div>
+                        <div><span className="text-xs text-gray-500 block">صفة البائع</span><strong className="text-gray-800">{modalConfig.data.sellerRole || 'غير محدد'}</strong></div>
+                        <div><span className="text-xs text-gray-500 block">رقم السجل التجاري</span><strong className="text-gray-800">{modalConfig.data.commercialRegister || 'غير مسجل'}</strong></div>
+                        <div><span className="text-xs text-gray-500 block">سنوات الخبرة</span><strong className="text-gray-800">{modalConfig.data.experienceYears ? `${modalConfig.data.experienceYears} سنوات` : 'غير مسجل'}</strong></div>
+                        <div><span className="text-xs text-gray-500 block">العنوان</span><strong className="text-gray-800">{modalConfig.data.address || 'غير مسجل'}</strong></div>
+                      </>
+                    )}
+
+                    {/* بيانات الطبيب البيطري */}
+                    {(modalConfig.data.role === 'EquineVet' || (activeSidebarPage === 'dashboard' && activeTab === 'الأطباء البيطريين')) && (
+                      <>
+                        <div><span className="text-xs text-gray-500 block">الدولة / المدينة</span><strong className="text-gray-800">{modalConfig.data.countryCity || 'غير مسجل'}</strong></div>
+                        <div><span className="text-xs text-gray-500 block">رقم الرخصة</span><strong className="text-gray-800">{modalConfig.data.licenseNumber || modalConfig.data.license || 'غير مسجل'}</strong></div>
+                        <div><span className="text-xs text-gray-500 block">التخصص</span><strong className="text-gray-800">{modalConfig.data.vetSpecialization || modalConfig.data.specialty || 'غير محدد'}</strong></div>
+                        <div><span className="text-xs text-gray-500 block">سنوات الخبرة</span><strong className="text-gray-800">{modalConfig.data.experienceYears ? `${modalConfig.data.experienceYears} سنوات` : 'غير مسجل'}</strong></div>
+                        <div><span className="text-xs text-gray-500 block">أماكن العمل</span><strong className="text-gray-800">{modalConfig.data.clinicsWorkedAt || 'غير مسجل'}</strong></div>
+                        <div className="mt-2"><span className="text-xs text-gray-500 block">نبذة وخبرات</span><p className="text-gray-800 text-sm mt-1 bg-gray-50 p-3 rounded-lg border border-gray-100">{modalConfig.data.vetBio || 'لا توجد نبذة'}</p></div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* المرفقات */}
+                {((modalConfig.data.files && Object.keys(modalConfig.data.files).length > 0) || modalConfig.data.nationalIdFile || modalConfig.data.licenseFile || modalConfig.data.vetCertificates || modalConfig.data.recommendationLetter) && (
+                  <div className="mt-6 border-t border-gray-100 pt-6">
+                    <h3 className="text-sm font-bold text-gray-800 mb-4">الملفات والمستندات المرفقة</h3>
+                    <div className="flex gap-4 overflow-x-auto pb-2">
+                      {(modalConfig.data.nationalIdFile || (modalConfig.data.files && modalConfig.data.files.nationalIdFile)) && (
+                        <a href={modalConfig.data.nationalIdFile || modalConfig.data.files.nationalIdFile} target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-3 rounded-xl border border-blue-100 hover:bg-blue-100 transition whitespace-nowrap">
+                          <i className="fas fa-file-pdf text-xl"></i> <span className="font-bold text-sm">البطاقة الشخصية</span>
+                        </a>
+                      )}
+                      {(modalConfig.data.recommendationLetter || (modalConfig.data.files && modalConfig.data.files.recommendationLetter)) && (
+                        <a href={modalConfig.data.recommendationLetter || modalConfig.data.files.recommendationLetter} target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-purple-50 text-purple-600 px-4 py-3 rounded-xl border border-purple-100 hover:bg-purple-100 transition whitespace-nowrap">
+                          <i className="fas fa-certificate text-xl"></i> <span className="font-bold text-sm">خطاب الترخيص / التوصية</span>
+                        </a>
+                      )}
+                      {(modalConfig.data.licenseFile || (modalConfig.data.files && modalConfig.data.files.licenseFile)) && (
+                        <a href={modalConfig.data.licenseFile || modalConfig.data.files.licenseFile} target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-orange-50 text-orange-600 px-4 py-3 rounded-xl border border-orange-100 hover:bg-orange-100 transition whitespace-nowrap">
+                          <i className="fas fa-id-badge text-xl"></i> <span className="font-bold text-sm">رخصة المزاولة</span>
+                        </a>
+                      )}
+                      {(modalConfig.data.vetCertificates || (modalConfig.data.files && modalConfig.data.files.vetCertificates)) && (
+                        <a href={modalConfig.data.vetCertificates || modalConfig.data.files.vetCertificates} target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-3 rounded-xl border border-indigo-100 hover:bg-indigo-100 transition whitespace-nowrap">
+                          <i className="fas fa-file-medical text-xl"></i> <span className="font-bold text-sm">الشهادات والخبرات</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-8 flex justify-between items-center border-t border-gray-100 pt-5">
+                  <button onClick={closeModal} className="bg-gray-100 text-gray-700 px-8 py-3 rounded-xl font-bold hover:bg-gray-200 transition">إغلاق النافذة</button>
+
+                  {activeSidebarPage === 'requests' && modalConfig.data.status === 'قيد الانتظار' && (
+                    <div className="flex gap-3">
+                      <button onClick={() => handleRequestAction(modalConfig.data.id, 'مرفوض')} className="bg-red-50 text-red-600 px-6 py-3 rounded-xl font-bold hover:bg-red-100 transition border border-red-100 flex items-center gap-2">
+                        <i className="fas fa-times"></i> رفض الطلب
+                      </button>
+                      <button onClick={() => handleRequestAction(modalConfig.data.id, 'مكتمل')} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow-md shadow-emerald-600/30 flex items-center gap-2">
+                        <i className="fas fa-check"></i> قبول الطلب
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -504,361 +915,356 @@ export default function Dashboard() {
             {/* ======================= عرض التفاصيل المخصص للمرابط ======================= */}
             {modalConfig.type === 'view' && activeSidebarPage === 'studs' && (
               <div className="flex flex-col w-full">
-                {/* Header matches the Add form header */}
                 <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gradient-to-l from-emerald-900 to-emerald-800 shrink-0 rounded-t-2xl">
-                    <h2 className="text-2xl font-black text-white flex items-center gap-3">
-                        <i className="fas fa-building text-emerald-200"></i> تفاصيل المربط: {modalConfig.data.name}
-                    </h2>
-                    <button onClick={closeModal} className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors z-10">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
+                  <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                    <i className="fas fa-building text-emerald-200"></i> تفاصيل المربط: {modalConfig.data.name}
+                  </h2>
+                  <button onClick={closeModal} className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors z-10">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                  </button>
                 </div>
 
                 <div className="p-6 md:p-8 overflow-y-auto bg-[#FAF9F6] dark:bg-gray-900">
-                   <div className="flex flex-col lg:flex-row gap-8">
-                      {/* Right side (Main details) */}
-                      <div className="lg:w-2/3 space-y-6">
-                         {/* Basic Info Block */}
-                         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                            <h3 className="text-lg font-bold text-emerald-800 mb-4 border-b border-gray-100 pb-2"><i className="fas fa-info-circle ml-2"></i> بيانات المربط الأساسية</h3>
-                            <div className="grid grid-cols-2 gap-y-4 gap-x-6">
-                              <div><span className="text-xs text-gray-400 block mb-1 font-bold">الاسم (إنجليزي)</span><strong className="text-gray-800">{modalConfig.data.nameEn || 'غير محدد'}</strong></div>
-                              <div><span className="text-xs text-gray-400 block mb-1 font-bold">نوع المربط</span><strong className="text-gray-800">{modalConfig.data.type || 'غير محدد'}</strong></div>
-                              <div><span className="text-xs text-gray-400 block mb-1 font-bold">تاريخ التأسيس</span><strong className="text-gray-800">{modalConfig.data.foundedDate || 'غير محدد'}</strong></div>
-                              <div><span className="text-xs text-gray-400 block mb-1 font-bold">رقم التسجيل</span><strong className="text-gray-800">{modalConfig.data.regNo || 'غير محدد'}</strong></div>
-                              <div className="col-span-2">
-                                 <span className="text-xs text-gray-400 block mb-1 font-bold">نبذة عن المربط</span>
-                                 <p className="text-gray-800 text-sm leading-relaxed mt-1">{modalConfig.data.about || 'لا توجد نبذة مسجلة عن هذا المربط حتى الآن.'}</p>
-                              </div>
-                            </div>
-                         </div>
-
-                         {/* Contact & Social Block */}
-                         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                            <h3 className="text-lg font-bold text-emerald-800 mb-4 border-b border-gray-100 pb-2"><i className="fas fa-address-book ml-2"></i> معلومات التواصل والروابط</h3>
-                            <div className="grid grid-cols-2 gap-y-4 gap-x-6">
-                              <div><span className="text-xs text-gray-400 block mb-1 font-bold">البريد الإلكتروني</span><strong className="text-gray-800 break-all" dir="ltr">{modalConfig.data.email || 'غير مسجل'}</strong></div>
-                              <div><span className="text-xs text-gray-400 block mb-1 font-bold">رقم الهاتف</span><strong className="text-gray-800" dir="ltr">{modalConfig.data.phone || 'غير مسجل'}</strong></div>
-                            </div>
-                            {/* Social Icons row */}
-                            <div className="flex gap-4 mt-5 pt-4 border-t border-gray-50">
-                              {modalConfig.data.facebook ? <a href={modalConfig.data.facebook} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition"><i className="fab fa-facebook-f"></i></a> : <div className="w-10 h-10 rounded-full bg-gray-50 text-gray-300 flex items-center justify-center"><i className="fab fa-facebook-f"></i></div>}
-                              {modalConfig.data.instagram ? <a href={modalConfig.data.instagram} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center hover:bg-pink-100 transition"><i className="fab fa-instagram"></i></a> : <div className="w-10 h-10 rounded-full bg-gray-50 text-gray-300 flex items-center justify-center"><i className="fab fa-instagram"></i></div>}
-                              {modalConfig.data.twitter ? <a href={modalConfig.data.twitter} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center hover:bg-sky-100 transition"><i className="fab fa-twitter"></i></a> : <div className="w-10 h-10 rounded-full bg-gray-50 text-gray-300 flex items-center justify-center"><i className="fab fa-twitter"></i></div>}
-                              {modalConfig.data.youtube ? <a href={modalConfig.data.youtube} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition"><i className="fab fa-youtube"></i></a> : <div className="w-10 h-10 rounded-full bg-gray-50 text-gray-300 flex items-center justify-center"><i className="fab fa-youtube"></i></div>}
-                            </div>
-                         </div>
+                  <div className="flex flex-col lg:flex-row gap-8">
+                    <div className="lg:w-2/3 space-y-6">
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <h3 className="text-lg font-bold text-emerald-800 mb-4 border-b border-gray-100 pb-2"><i className="fas fa-info-circle ml-2"></i> بيانات المربط الأساسية</h3>
+                        <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+                          <div><span className="text-xs text-gray-400 block mb-1 font-bold">الاسم (إنجليزي)</span><strong className="text-gray-800">{modalConfig.data.nameEn || 'غير محدد'}</strong></div>
+                          <div><span className="text-xs text-gray-400 block mb-1 font-bold">نوع المربط</span><strong className="text-gray-800">{modalConfig.data.type || 'غير محدد'}</strong></div>
+                          <div><span className="text-xs text-gray-400 block mb-1 font-bold">تاريخ التأسيس</span><strong className="text-gray-800">{modalConfig.data.foundedDate || 'غير محدد'}</strong></div>
+                          <div><span className="text-xs text-gray-400 block mb-1 font-bold">رقم التسجيل</span><strong className="text-gray-800">{modalConfig.data.regNo || 'غير محدد'}</strong></div>
+                          <div className="col-span-2">
+                            <span className="text-xs text-gray-400 block mb-1 font-bold">نبذة عن المربط</span>
+                            <p className="text-gray-800 text-sm leading-relaxed mt-1">{modalConfig.data.about || 'لا توجد نبذة مسجلة عن هذا المربط حتى الآن.'}</p>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* Left side (Image & Map/Location) */}
-                      <div className="lg:w-1/3 space-y-6">
-                         <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center">
-                            <div className="w-full h-48 rounded-xl overflow-hidden mb-4 border-2 border-gray-50">
-                               <img src={modalConfig.data.image} alt={modalConfig.data.name} className="w-full h-full object-cover" />
-                            </div>
-                            <span className={`px-6 py-2 rounded-full text-sm font-bold w-full text-center ${getOrderStatusStyle(modalConfig.data.status)}`}>
-                               {modalConfig.data.status || 'نشط'}
-                            </span>
-                         </div>
-
-                         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                            <h3 className="text-lg font-bold text-emerald-800 mb-4 border-b border-gray-100 pb-2"><i className="fas fa-map-marker-alt ml-2"></i> الموقع</h3>
-                            <div className="space-y-3">
-                              <div><span className="text-xs text-gray-400 block mb-1 font-bold">الدولة • المدينة</span><strong className="text-gray-800">{modalConfig.data.country || 'مصر'} • {modalConfig.data.city || 'غير محدد'}</strong></div>
-                              {modalConfig.data.streetAddress && <div><span className="text-xs text-gray-400 block mb-1 font-bold">الشارع</span><strong className="text-gray-800">{modalConfig.data.streetAddress}</strong></div>}
-                            </div>
-                            {/* Mini Map representation */}
-                            <div className="w-full h-32 mt-4 rounded-xl fake-map-bg border border-gray-200 relative flex items-center justify-center">
-                               <i className="fas fa-map-marker-alt text-3xl text-emerald-600 drop-shadow-md absolute"></i>
-                            </div>
-                         </div>
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <h3 className="text-lg font-bold text-emerald-800 mb-4 border-b border-gray-100 pb-2"><i className="fas fa-address-book ml-2"></i> معلومات التواصل والروابط</h3>
+                        <div className="grid grid-cols-2 gap-y-4 gap-x-6">
+                          <div><span className="text-xs text-gray-400 block mb-1 font-bold">البريد الإلكتروني</span><strong className="text-gray-800 break-all" dir="ltr">{modalConfig.data.email || 'غير مسجل'}</strong></div>
+                          <div><span className="text-xs text-gray-400 block mb-1 font-bold">رقم الهاتف</span><strong className="text-gray-800" dir="ltr">{modalConfig.data.phone || 'غير مسجل'}</strong></div>
+                        </div>
+                        <div className="flex gap-4 mt-5 pt-4 border-t border-gray-50">
+                          {modalConfig.data.facebook ? <a href={modalConfig.data.facebook} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100 transition"><i className="fab fa-facebook-f"></i></a> : <div className="w-10 h-10 rounded-full bg-gray-50 text-gray-300 flex items-center justify-center"><i className="fab fa-facebook-f"></i></div>}
+                          {modalConfig.data.instagram ? <a href={modalConfig.data.instagram} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-pink-50 text-pink-600 flex items-center justify-center hover:bg-pink-100 transition"><i className="fab fa-instagram"></i></a> : <div className="w-10 h-10 rounded-full bg-gray-50 text-gray-300 flex items-center justify-center"><i className="fab fa-instagram"></i></div>}
+                          {modalConfig.data.twitter ? <a href={modalConfig.data.twitter} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center hover:bg-sky-100 transition"><i className="fab fa-twitter"></i></a> : <div className="w-10 h-10 rounded-full bg-gray-50 text-gray-300 flex items-center justify-center"><i className="fab fa-twitter"></i></div>}
+                          {modalConfig.data.youtube ? <a href={modalConfig.data.youtube} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 transition"><i className="fab fa-youtube"></i></a> : <div className="w-10 h-10 rounded-full bg-gray-50 text-gray-300 flex items-center justify-center"><i className="fab fa-youtube"></i></div>}
+                        </div>
                       </div>
-                   </div>
+
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <h3 className="text-lg font-bold text-emerald-800 mb-4 border-b border-gray-100 pb-2"><i className="fas fa-horse ml-2"></i> الخيول في الفروع</h3>
+                        {(() => {
+                          const studName = modalConfig.data?.name || '';
+                          const branches = getBranchesForStud(studName);
+                          if (branches.length === 0) {
+                            return <p className="text-sm text-gray-500">لا توجد فروع مسجلة لهذا المربط.</p>;
+                          }
+
+                          return (
+                            <div className="space-y-4">
+                              {branches.map((branch) => {
+                                const horsesInBranch = horsesData.filter(h => normalize(h.studName) === normalize(studName) && normalize(h.branch) === normalize(branch));
+                                return (
+                                  <div key={branch} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                    <div className="flex items-center justify-between">
+                                      <h4 className="text-sm font-bold text-gray-700">{branch}</h4>
+                                      <span className="text-xs text-gray-400">{horsesInBranch.length} خيل</span>
+                                    </div>
+                                    {horsesInBranch.length === 0 ? (
+                                      <p className="text-sm text-gray-500 mt-2">لا توجد خيول مسجلة في هذا الفرع.</p>
+                                    ) : (
+                                      <ul className="mt-2 space-y-1">
+                                        {horsesInBranch.map(horse => (
+                                          <li key={horse.id} className="text-sm text-gray-700">- {horse.name}</li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    <div className="lg:w-1/3 space-y-6">
+                      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center">
+                        <div className="w-full h-48 rounded-xl overflow-hidden mb-4 border-2 border-gray-50">
+                          <img src={modalConfig.data.image} alt={modalConfig.data.name} className="w-full h-full object-cover" />
+                        </div>
+                        <span className={`px-6 py-2 rounded-full text-sm font-bold w-full text-center ${getOrderStatusStyle(modalConfig.data.status)}`}>
+                          {modalConfig.data.status || 'نشط'}
+                        </span>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                        <h3 className="text-lg font-bold text-emerald-800 mb-4 border-b border-gray-100 pb-2"><i className="fas fa-map-marker-alt ml-2"></i> الموقع</h3>
+                        <div className="space-y-3">
+                          <div><span className="text-xs text-gray-400 block mb-1 font-bold">الدولة • المدينة</span><strong className="text-gray-800">{modalConfig.data.country || 'مصر'} • {modalConfig.data.city || 'غير محدد'}</strong></div>
+                          {modalConfig.data.streetAddress && <div><span className="text-xs text-gray-400 block mb-1 font-bold">الشارع</span><strong className="text-gray-800">{modalConfig.data.streetAddress}</strong></div>}
+                        </div>
+                        <div className="w-full h-32 mt-4 rounded-xl fake-map-bg border border-gray-200 relative flex items-center justify-center">
+                          <i className="fas fa-map-marker-alt text-3xl text-emerald-600 drop-shadow-md absolute"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                
-                {/* Footer */}
+
                 <div className="p-6 border-t border-gray-100 bg-white flex justify-end gap-4 rounded-b-[2rem]">
-                    <button onClick={closeModal} className="px-8 py-3.5 rounded-2xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">إغلاق النافذة</button>
+                  <button onClick={closeModal} className="px-8 py-3.5 rounded-2xl font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">إغلاق النافذة</button>
                 </div>
-              </div>
-            )}
-
-            {/* عرض التفاصيل العادي (للباقي: المزادات، البائعين، الأطباء، المشترين) */}
-            {modalConfig.type === 'view' && activeSidebarPage !== 'horses' && activeSidebarPage !== 'studs' && (
-              <div className="p-8 max-w-2xl mx-auto">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-5 mb-6">
-                  <h2 className="text-xl font-bold flex items-center gap-3 text-gray-800"><div className="bg-emerald-50 w-10 h-10 rounded-full flex items-center justify-center text-emerald-600"><i className="fas fa-eye"></i></div>تفاصيل السجل</h2>
-                  <button onClick={closeModal} className="text-gray-400 hover:text-gray-600"><i className="fas fa-times text-xl"></i></button>
-                </div>
-                <div className="grid grid-cols-2 gap-y-6 gap-x-8 text-sm">
-                  {Object.entries(modalConfig.data).map(([key, value]) => {
-                    if (key === 'id' || key === 'image' || key === 'initial' || typeof value === 'object') return null;
-                    
-                    // تحويل مفاتيح الحقول إلى اللغة العربية لتبدو بشكل سليم في العرض
-                    const arabicLabels = {
-                      title: 'اسم المزاد / الفعالية',
-                      startDate: 'تاريخ البدء',
-                      endDate: 'تاريخ الانتهاء',
-                      location: 'الموقع',
-                      description: 'وصف الفعالية',
-                      status: 'الحالة',
-                      seller: 'اسم البائع',
-                      phone: 'رقم الهاتف',
-                      email: 'البريد الإلكتروني',
-                      orderId: 'معرف الطلب',
-                      name: 'الاسم',
-                      orders: 'الطلبات',
-                      license: 'رقم الرخصة',
-                      specialty: 'التخصص',
-                      date: 'التاريخ',
-                      type: 'النوع',
-                      amount: 'المبلغ',
-                      horseName: 'اسم الخيل',
-                      vetName: 'اسم الطبيب',
-                      diagnosis: 'التشخيص',
-                      horse: 'الخيل'
-                    };
-                    const displayLabel = arabicLabels[key] || key;
-
-                    return (
-                      <div key={key} className={`bg-gray-50 p-4 rounded-xl border border-gray-100 ${(key === 'about' || key === 'description') ? 'col-span-2' : ''}`}>
-                        <span className="block text-gray-400 text-xs mb-2 font-bold uppercase">{displayLabel}</span>
-                        <strong className="text-gray-800 text-base">{value}</strong>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="mt-8 flex justify-end"><button onClick={closeModal} className="bg-gray-100 text-gray-700 px-8 py-3 rounded-xl font-bold hover:bg-gray-200 transition">إغلاق</button></div>
               </div>
             )}
 
             {/* الإضافة والتعديل لـ "المرابط" (متعدد الخطوات) */}
             {(modalConfig.type === 'add' || modalConfig.type === 'edit') && activeSidebarPage === 'studs' && (
-              <div className="flex flex-col w-full">
-                  <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gradient-to-l from-emerald-900 to-emerald-800 shrink-0 rounded-t-2xl">
-                      <h2 className="text-2xl font-black text-white flex items-center gap-3">
-                          {modalConfig.type === 'edit' ? <><i className="fas fa-edit text-emerald-200"></i> تعديل بيانات المربط</> : <><i className="fas fa-plus-circle text-emerald-200"></i> إضافة مربط جديد</>}
-                      </h2>
-                      <button onClick={closeModal} className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors z-10">
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                      </button>
-                  </div>
+              <div className="flex flex-col w-full h-full max-h-screen">
+                <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gradient-to-l from-emerald-900 to-emerald-800 shrink-0 rounded-t-2xl">
+                  <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                    {modalConfig.type === 'edit' ? <><i className="fas fa-edit text-emerald-200"></i> تعديل بيانات المربط</> : <><i className="fas fa-plus-circle text-emerald-200"></i> إضافة مربط جديد</>}
+                  </h2>
+                  <button onClick={closeModal} className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-full transition-colors z-10">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                  </button>
+                </div>
 
-                  <div className="px-10 py-6 hidden sm:block shrink-0 bg-[#FAF9F6] dark:bg-gray-900 border-b border-gray-100">
-                      <div className="flex items-center justify-between relative">
-                          <div className="absolute top-4 left-[10%] right-[10%] h-[2px] bg-gray-200 -z-10"></div>
-                          <div className="absolute top-4 right-[10%] h-[2px] bg-emerald-600 -z-10 transition-all duration-1000" style={{ width: `${((currentStep - 1) / 3) * 80}%` }}></div>
-                          
-                          {[
-                              { num: 1, label: 'بيانات المربط' },
-                              { num: 2, label: 'معلومات التواصل' },
-                              { num: 3, label: 'روابط السوشيال ميديا' },
-                              { num: 4, label: 'الصور والفيديو' }
-                          ].map((step) => (
-                              <div key={step.num} className="flex flex-col items-center gap-2 bg-[#FAF9F6] dark:bg-gray-900 px-2">
-                                  <div className={`w-8 h-8 flex items-center justify-center text-sm font-bold transition-all duration-300 relative rounded-lg border
+                <div className="px-10 py-6 hidden sm:block shrink-0 bg-[#FAF9F6] dark:bg-gray-900 border-b border-gray-100">
+                  <div className="flex items-center justify-between relative">
+                    <div className="absolute top-4 left-[10%] right-[10%] h-[2px] bg-gray-200 -z-10"></div>
+                    <div className="absolute top-4 right-[10%] h-[2px] bg-emerald-600 -z-10 transition-all duration-1000" style={{ width: `${((currentStep - 1) / 3) * 80}%` }}></div>
+
+                    {[
+                      { num: 1, label: 'بيانات المربط' },
+                      { num: 2, label: 'معلومات التواصل' },
+                      { num: 3, label: 'روابط السوشيال ميديا' },
+                      { num: 4, label: 'الصور والفيديو' }
+                    ].map((step) => (
+                      <div key={step.num} className="flex flex-col items-center gap-2 bg-[#FAF9F6] dark:bg-gray-900 px-2">
+                        <div className={`w-8 h-8 flex items-center justify-center text-sm font-bold transition-all duration-300 relative rounded-lg border
                                       ${currentStep >= step.num ? 'bg-emerald-600 border-emerald-600 text-white shadow-md' : 'bg-white text-gray-400 border-gray-200'}`}>
-                                      {step.num}
-                                  </div>
-                                  <span className={`text-xs mt-1 transition-colors ${currentStep >= step.num ? 'text-emerald-800 font-bold' : 'text-gray-400'}`}>
-                                      {step.label}
-                                  </span>
-                              </div>
-                          ))}
+                          {step.num}
+                        </div>
+                        <span className={`text-xs mt-1 transition-colors ${currentStep >= step.num ? 'text-emerald-800 font-bold' : 'text-gray-400'}`}>
+                          {step.label}
+                        </span>
                       </div>
+                    ))}
                   </div>
+                </div>
 
-                  <div className="p-6 md:p-8 overflow-hidden bg-[#FAF9F6] dark:bg-gray-900">
-                      <div key={currentStep} className={slideDirection === 'forward' ? 'slide-forward' : 'slide-backward'}>
-                          {currentStep === 1 && (
-                              <div className="flex flex-col lg:flex-row gap-8">
-                                  <div className="lg:w-2/3 space-y-5">
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative">
-                                          <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                            <label className="text-sm font-bold text-emerald-800">اسم المربط (إنجليزي) *</label>
-                                            <input type="text" value={formData.nameEn || ''} onChange={e => {
-                                                  const val = e.target.value;
-                                                  if (!/[\u0600-\u06FF]/.test(val)) { setFormData({...formData, nameEn: val}); setFormErrors({...formErrors, nameEn: false}); }
-                                              }} className={`lux-input text-left ${formErrors.nameEn ? 'input-error' : ''}`} dir="ltr" placeholder="Stud Name" />
-                                          </div>
-                                          <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                            <label className="text-sm font-bold text-emerald-800">اسم المربط (عربي) *</label>
-                                            <input type="text" value={formData.name || ''} onChange={e => {
-                                                  const val = e.target.value;
-                                                  if (!/[a-zA-Z]/.test(val)) { setFormData({...formData, name: val}); setFormErrors({...formErrors, name: false}); }
-                                              }} className={`lux-input ${formErrors.name ? 'input-error' : ''}`} dir="rtl" placeholder="اسم المربط" />
-                                          </div>
-                                          <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                            <label className="text-sm font-bold text-emerald-800">تاريخ التأسيس *</label>
-                                            <input type="date" value={formData.foundedDate || ''} onChange={e => {setFormData({...formData, foundedDate: e.target.value}); setFormErrors({...formErrors, foundedDate: false})}} className={`lux-input ${formErrors.foundedDate ? 'input-error' : ''}`} />
-                                          </div>
-                                          <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                            <label className="text-sm font-bold text-emerald-800">رقم التسجيل *</label>
-                                            <input type="text" value={formData.regNo || ''} onChange={e => {setFormData({...formData, regNo: e.target.value}); setFormErrors({...formErrors, regNo: false})}} className={`lux-input ${formErrors.regNo ? 'input-error' : ''}`} placeholder="رقم التسجيل" />
-                                          </div>
-                                          <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm md:col-span-2">
-                                            <label className="text-sm font-bold text-emerald-800">نوع المربط *</label>
-                                            <select value={formData.type || ''} onChange={e => {setFormData({...formData, type: e.target.value}); setFormErrors({...formErrors, type: false})}} className={`lux-input ${formErrors.type ? 'input-error' : ''}`}>
-                                              <option value="" disabled hidden>اختر نوع المربط</option>
-                                              <option value="تدريب">تدريب</option>
-                                              <option value="بيع">بيع</option>
-                                              <option value="تدريب وبيع">تدريب وبيع</option>
-                                            </select>
-                                          </div>
-                                      </div>
-                                      <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                          <label className="text-sm font-bold text-emerald-800">نبذة عن المربط</label>
-                                          <textarea placeholder="اكتب نبذة مختصرة عن المربط وتاريخه..." rows="3" value={formData.about || ''} onChange={e => setFormData({...formData, about: e.target.value})} className="lux-input resize-none"></textarea>
-                                      </div>
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                          <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                              <label className="text-sm font-bold text-emerald-800">الدولة</label>
-                                              <select value={formData.country || 'مصر'} onChange={e => setFormData({...formData, country: e.target.value})} className="lux-input opacity-70 cursor-not-allowed" disabled>
-                                                  <option value="مصر">مصر</option>
-                                              </select>
-                                          </div>
-                                          <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                              <label className="text-sm font-bold text-emerald-800">المدينة / المحافظة *</label>
-                                              <select value={formData.city || ''} onChange={e => {setFormData({...formData, city: e.target.value}); setFormErrors({...formErrors, city: false})}} className={`lux-input ${formErrors.city ? 'input-error' : ''}`}>
-                                                  <option value="">اختر المحافظة</option>
-                                                  {egyptGovernorates.map(gov => <option key={gov} value={gov}>{gov}</option>)}
-                                              </select>
-                                          </div>
-                                      </div>
-                                      <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                          <label className="text-sm font-bold text-emerald-800">عنوان الشارع</label>
-                                          <input type="text" placeholder="العنوان التفصيلي" value={formData.streetAddress || ''} onChange={e => setFormData({...formData, streetAddress: e.target.value})} className="lux-input" />
-                                      </div>
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                          <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                              <label className="text-sm font-bold text-emerald-800">خط العرض (Latitude)</label>
-                                              <input type="text" placeholder="مثال: 30.0444" value={formData.lat || ''} onChange={e => setFormData({...formData, lat: e.target.value})} className="lux-input text-left" dir="ltr" />
-                                          </div>
-                                          <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                                              <label className="text-sm font-bold text-emerald-800">خط الطول (Longitude)</label>
-                                              <input type="text" placeholder="مثال: 31.2357" value={formData.lng || ''} onChange={e => setFormData({...formData, lng: e.target.value})} className="lux-input text-left" dir="ltr" />
-                                          </div>
-                                      </div>
-                                  </div>
-                                  <div className="lg:w-1/3 flex flex-col">
-                                      <label className="text-sm font-bold text-emerald-800 mb-2 block">موقع المربط على الخريطة</label>
-                                      <div className="flex-1 min-h-[300px] border border-gray-200 rounded-2xl relative overflow-hidden fake-map-bg p-3 shadow-inner">
-                                          <div className="bg-white rounded-xl shadow-sm flex items-center p-2 mb-2 w-full z-10 relative border border-gray-200">
-                                              <input type="text" placeholder="بحث عن موقع..." className="flex-1 outline-none text-sm bg-transparent px-2 font-medium" />
-                                              <svg className="w-4 h-4 text-gray-400 mx-1 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                          </div>
-                                          <button className="absolute bottom-4 right-4 w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-700 transition-all z-10">
-                                              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                          </button>
-                                      </div>
-                                  </div>
-                              </div>
-                          )}
-                          {currentStep === 2 && (
-                              <div className="space-y-6 max-w-2xl mx-auto py-8">
-                                  <div className="space-y-5">
-                                      <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                                          <label className="text-sm font-bold text-emerald-800">البريد الإلكتروني *</label>
-                                          <div className="relative">
-                                              <input type="email" placeholder="example@stud.com" value={formData.email || ''} onChange={e => {setFormData({...formData, email: e.target.value}); setFormErrors({...formErrors, email: false})}} className={`lux-input pr-10 text-left ${formErrors.email ? 'input-error' : ''}`} dir="ltr" />
-                                              <i className="fas fa-envelope absolute top-4 right-4 text-gray-400"></i>
-                                          </div>
-                                      </div>
-                                      <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                                          <label className="text-sm font-bold text-emerald-800">رقم الهاتف الأساسي *</label>
-                                          <div className="relative">
-                                              <input type="tel" placeholder="+20 100 000 0000" value={formData.phone || ''} onChange={e => {
-                                                      const val = e.target.value;
-                                                      if (/^[\d+]*$/.test(val)) { setFormData({...formData, phone: val}); setFormErrors({...formErrors, phone: false}); }
-                                                  }} className={`lux-input pr-10 text-left ${formErrors.phone ? 'input-error' : ''}`} dir="ltr" />
-                                              <i className="fas fa-phone absolute top-4 right-4 text-gray-400"></i>
-                                          </div>
-                                      </div>
-                                  </div>
-                              </div>
-                          )}
-                          {currentStep === 3 && (
-                              <div className="space-y-6 max-w-4xl mx-auto py-6">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                      <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                                          <label className="text-sm font-bold text-emerald-800">فيسبوك</label>
-                                          <div className="relative"><input type="url" placeholder="https://facebook.com/..." value={formData.facebook || ''} onChange={e => setFormData({...formData, facebook: e.target.value})} className="lux-input pr-10 text-left" dir="ltr" /><i className="fab fa-facebook absolute top-4 right-4 text-[#1877F2]"></i></div>
-                                      </div>
-                                      <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                                          <label className="text-sm font-bold text-emerald-800">إنستجرام</label>
-                                          <div className="relative"><input type="url" placeholder="https://instagram.com/..." value={formData.instagram || ''} onChange={e => setFormData({...formData, instagram: e.target.value})} className="lux-input pr-10 text-left" dir="ltr" /><i className="fab fa-instagram absolute top-4 right-4 text-[#E4405F]"></i></div>
-                                      </div>
-                                      <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                                          <label className="text-sm font-bold text-emerald-800">يوتيوب</label>
-                                          <div className="relative"><input type="url" placeholder="https://youtube.com/..." value={formData.youtube || ''} onChange={e => setFormData({...formData, youtube: e.target.value})} className="lux-input pr-10 text-left" dir="ltr" /><i className="fab fa-youtube absolute top-4 right-4 text-[#FF0000]"></i></div>
-                                      </div>
-                                      <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                                          <label className="text-sm font-bold text-emerald-800">إكس (تويتر)</label>
-                                          <div className="relative"><input type="url" placeholder="https://x.com/..." value={formData.twitter || ''} onChange={e => setFormData({...formData, twitter: e.target.value})} className="lux-input pr-10 text-left" dir="ltr" /><i className="fab fa-twitter absolute top-4 right-4 text-[#1DA1F2]"></i></div>
-                                      </div>
-                                  </div>
-                              </div>
-                          )}
-                          {currentStep === 4 && (
-                              <div className="space-y-6 max-w-5xl mx-auto py-2">
-                                  <div className="space-y-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-500 transition-colors">
-                                      <label className="text-sm font-bold text-emerald-800 block">رفع صور المربط {modalConfig.type === 'add' && <span className="text-red-500">*</span>}</label>
-                                      <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors ${formErrors.images ? 'border-red-500 bg-red-50' : ''}`}>
-                                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                              <svg className="w-8 h-8 mb-3 text-emerald-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
-                                              <p className="mb-2 text-sm text-gray-500"><span className="font-semibold text-emerald-600">اضغط لرفع صور</span> أو اسحب وأفلت</p>
-                                              <p className="text-xs text-gray-400">الصيغ المدعومة : صور فقط (image/*)</p>
-                                          </div>
-                                          <input type="file" className="hidden" multiple accept="image/*" onChange={(e) => {setFormData({...formData, images:[...(formData.images || []), ...Array.from(e.target.files)]}); setFormErrors({...formErrors, images: false})}} />
-                                      </label>
-                                      {formData.images && formData.images.length > 0 && (
-                                          <div className="flex gap-3 mt-4 overflow-x-auto pb-2 custom-scrollbar">
-                                              {formData.images.map((img, i) => (
-                                                  <div key={i} className="w-20 h-20 rounded-xl border-2 border-emerald-600 overflow-hidden flex-shrink-0 shadow-md">
-                                                      <img src={URL.createObjectURL(img)} alt={`preview-${i}`} className="w-full h-full object-cover" />
-                                                  </div>
-                                              ))}
-                                          </div>
-                                      )}
-                                  </div>
-                                  <div className="space-y-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                                      <label className="text-sm font-bold text-emerald-800">رابط فيديو المربط الترويجي (يوتيوب)</label>
-                                      <div className="relative"><input type="url" placeholder="https://youtube.com/watch?v=..." value={formData.videoUrl || ''} onChange={e => setFormData({...formData, videoUrl: e.target.value})} className="lux-input pr-10 text-left" dir="ltr" /><i className="fab fa-youtube absolute top-4 right-4 text-gray-400"></i></div>
-                                  </div>
-                              </div>
-                          )}
+                <div className="flex-1 overflow-y-auto bg-[#FAF9F6] dark:bg-gray-900 custom-scrollbar">
+                  <div key={currentStep} className={`p-6 md:p-8 ${slideDirection === 'forward' ? 'animate-slide-in-right' : 'animate-slide-in-left'}`}>
+                    {currentStep === 1 && (
+                      <div className="flex flex-col lg:flex-row gap-8">
+                        <div className="lg:w-2/3 space-y-5">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                              <label className="text-sm font-bold text-emerald-800">اسم المربط (إنجليزي) *</label>
+                              <input type="text" value={formData.nameEn || ''} onChange={e => {
+                                const val = e.target.value;
+                                if (!/[\u0600-\u06FF]/.test(val)) { setFormData({ ...formData, nameEn: val }); setFormErrors({ ...formErrors, nameEn: false }); }
+                              }} className={`lux-input text-left ${formErrors.nameEn ? 'input-error' : ''}`} dir="ltr" placeholder="Stud Name" />
+                            </div>
+                            <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                              <label className="text-sm font-bold text-emerald-800">اسم المربط (عربي) *</label>
+                              <input type="text" value={formData.name || ''} onChange={e => {
+                                const val = e.target.value;
+                                if (!/[a-zA-Z]/.test(val)) { setFormData({ ...formData, name: val }); setFormErrors({ ...formErrors, name: false }); }
+                              }} className={`lux-input ${formErrors.name ? 'input-error' : ''}`} dir="rtl" placeholder="اسم المربط" />
+                            </div>
+                            <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                              <label className="text-sm font-bold text-emerald-800">تاريخ التأسيس *</label>
+                              <input type="date" value={formData.foundedDate || ''} onChange={e => { setFormData({ ...formData, foundedDate: e.target.value }); setFormErrors({ ...formErrors, foundedDate: false }) }} className={`lux-input ${formErrors.foundedDate ? 'input-error' : ''}`} />
+                            </div>
+                            <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                              <label className="text-sm font-bold text-emerald-800">رقم التسجيل *</label>
+                              <input type="text" value={formData.regNo || ''} onChange={e => { setFormData({ ...formData, regNo: e.target.value }); setFormErrors({ ...formErrors, regNo: false }) }} className={`lux-input ${formErrors.regNo ? 'input-error' : ''}`} placeholder="رقم التسجيل" />
+                            </div>
+                            <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm md:col-span-2">
+                              <label className="text-sm font-bold text-emerald-800">نوع المربط *</label>
+                              <select value={formData.type || ''} onChange={e => { setFormData({ ...formData, type: e.target.value }); setFormErrors({ ...formErrors, type: false }) }} className={`lux-input ${formErrors.type ? 'input-error' : ''}`}>
+                                <option value="" disabled hidden>اختر نوع المربط</option>
+                                <option value="تدريب">تدريب</option>
+                                <option value="بيع">بيع</option>
+                                <option value="تدريب وبيع">تدريب وبيع</option>
+                              </select>
+                            </div>
+                            <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm md:col-span-2">
+                              <label className="text-sm font-bold text-emerald-800">الفروع (مفصولة بفواصل)</label>
+                              <input
+                                type="text"
+                                value={(formData.branches || []).join(', ')}
+                                onChange={e => {
+                                  const branches = e.target.value.split(',').map(b => b.trim()).filter(Boolean);
+                                  setFormData({ ...formData, branches });
+                                }}
+                                className="lux-input"
+                                placeholder="مثال: الفرع الرئيسي, فرع القاهرة"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                            <label className="text-sm font-bold text-emerald-800">نبذة عن المربط</label>
+                            <textarea placeholder="اكتب نبذة مختصرة عن المربط وتاريخه..." rows="3" value={formData.about || ''} onChange={e => setFormData({ ...formData, about: e.target.value })} className="lux-input resize-none"></textarea>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                              <label className="text-sm font-bold text-emerald-800">الدولة</label>
+                              <select value={formData.country || 'مصر'} onChange={e => setFormData({ ...formData, country: e.target.value })} className="lux-input opacity-70 cursor-not-allowed" disabled>
+                                <option value="مصر">مصر</option>
+                              </select>
+                            </div>
+                            <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                              <label className="text-sm font-bold text-emerald-800">المدينة / المحافظة *</label>
+                              <select value={formData.city || ''} onChange={e => { setFormData({ ...formData, city: e.target.value }); setFormErrors({ ...formErrors, city: false }) }} className={`lux-input ${formErrors.city ? 'input-error' : ''}`}>
+                                <option value="">اختر المحافظة</option>
+                                {egyptGovernorates.map(gov => <option key={gov} value={gov}>{gov}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                            <label className="text-sm font-bold text-emerald-800">عنوان الشارع</label>
+                            <input type="text" placeholder="العنوان التفصيلي" value={formData.streetAddress || ''} onChange={e => setFormData({ ...formData, streetAddress: e.target.value })} className="lux-input" />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                              <label className="text-sm font-bold text-emerald-800">خط العرض (Latitude)</label>
+                              <input type="text" placeholder="مثال: 30.0444" value={formData.lat || ''} onChange={e => setFormData({ ...formData, lat: e.target.value })} className="lux-input text-left" dir="ltr" />
+                            </div>
+                            <div className="space-y-2 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                              <label className="text-sm font-bold text-emerald-800">خط الطول (Longitude)</label>
+                              <input type="text" placeholder="مثال: 31.2357" value={formData.lng || ''} onChange={e => setFormData({ ...formData, lng: e.target.value })} className="lux-input text-left" dir="ltr" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="lg:w-1/3 flex flex-col">
+                          <label className="text-sm font-bold text-emerald-800 mb-2 block">موقع المربط على الخريطة</label>
+                          <div className="flex-1 min-h-[300px] border border-gray-200 rounded-2xl relative overflow-hidden fake-map-bg p-3 shadow-inner">
+                            <div className="bg-white rounded-xl shadow-sm flex items-center p-2 mb-2 w-full z-10 relative border border-gray-200">
+                              <input type="text" placeholder="بحث عن موقع..." className="flex-1 outline-none text-sm bg-transparent px-2 font-medium" />
+                              <i className="fas fa-search text-gray-400 mx-1 cursor-pointer"></i>
+                            </div>
+                            <button className="absolute bottom-4 right-4 w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-700 transition-all z-10">
+                              <i className="fas fa-plus"></i>
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                  </div>
+                    )}
 
-                  <div className="p-6 border-t border-gray-100 bg-white flex justify-end gap-4 rounded-b-[2rem]">
-                      <button onClick={handlePrevStep} className={`px-8 py-3.5 rounded-2xl font-bold text-gray-600 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors ${currentStep === 1 ? 'hidden' : 'block'}`}>السابق</button>
-                      {currentStep < 4 ? (
-                          <button onClick={handleNextStep} className="px-10 py-3.5 rounded-2xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 hover:shadow-xl hover:-translate-y-0.5 transition-all">التالي</button>
-                      ) : (
-                          <button onClick={handleSubmit} className="px-10 py-3.5 rounded-2xl font-bold text-white bg-emerald-800 hover:bg-emerald-900 shadow-lg shadow-emerald-900/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2">
-                              {modalConfig.type === 'edit' ? <i className="fas fa-save"></i> : null}
-                              {modalConfig.type === 'edit' ? 'حفظ التعديلات' : 'حفظ البيانات'}
-                          </button>
-                      )}
+                    {currentStep === 2 && (
+                      <div className="space-y-6 max-w-2xl mx-auto py-8">
+                        <div className="space-y-5">
+                          <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                            <label className="text-sm font-bold text-emerald-800">البريد الإلكتروني *</label>
+                            <div className="relative">
+                              <input type="email" placeholder="example@stud.com" value={formData.email || ''} onChange={e => { setFormData({ ...formData, email: e.target.value }); setFormErrors({ ...formErrors, email: false }) }} className={`lux-input pr-10 text-left ${formErrors.email ? 'input-error' : ''}`} dir="ltr" />
+                              <i className="fas fa-envelope absolute top-4 right-4 text-gray-400"></i>
+                            </div>
+                          </div>
+                          <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                            <label className="text-sm font-bold text-emerald-800">رقم الهاتف الأساسي *</label>
+                            <div className="relative">
+                              <input type="tel" placeholder="+20 100 000 0000" value={formData.phone || ''} onChange={e => {
+                                const val = e.target.value;
+                                if (/^[\d+]*$/.test(val)) { setFormData({ ...formData, phone: val }); setFormErrors({ ...formErrors, phone: false }); }
+                              }} className={`lux-input pr-10 text-left ${formErrors.phone ? 'input-error' : ''}`} dir="ltr" />
+                              <i className="fas fa-phone absolute top-4 right-4 text-gray-400"></i>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {currentStep === 3 && (
+                      <div className="space-y-6 max-w-4xl mx-auto py-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                            <label className="text-sm font-bold text-emerald-800">فيسبوك</label>
+                            <div className="relative"><input type="url" placeholder="https://facebook.com/..." value={formData.facebook || ''} onChange={e => setFormData({ ...formData, facebook: e.target.value })} className="lux-input pr-10 text-left" dir="ltr" /><i className="fab fa-facebook absolute top-4 right-4 text-[#1877F2]"></i></div>
+                          </div>
+                          <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                            <label className="text-sm font-bold text-emerald-800">إنستجرام</label>
+                            <div className="relative"><input type="url" placeholder="https://instagram.com/..." value={formData.instagram || ''} onChange={e => setFormData({ ...formData, instagram: e.target.value })} className="lux-input pr-10 text-left" dir="ltr" /><i className="fab fa-instagram absolute top-4 right-4 text-[#E4405F]"></i></div>
+                          </div>
+                          <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                            <label className="text-sm font-bold text-emerald-800">يوتيوب</label>
+                            <div className="relative"><input type="url" placeholder="https://youtube.com/..." value={formData.youtube || ''} onChange={e => setFormData({ ...formData, youtube: e.target.value })} className="lux-input pr-10 text-left" dir="ltr" /><i className="fab fa-youtube absolute top-4 right-4 text-[#FF0000]"></i></div>
+                          </div>
+                          <div className="space-y-2 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                            <label className="text-sm font-bold text-emerald-800">إكس (تويتر)</label>
+                            <div className="relative"><input type="url" placeholder="https://x.com/..." value={formData.twitter || ''} onChange={e => setFormData({ ...formData, twitter: e.target.value })} className="lux-input pr-10 text-left" dir="ltr" /><i className="fab fa-twitter absolute top-4 right-4 text-[#1DA1F2]"></i></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {currentStep === 4 && (
+                      <div className="space-y-6 max-w-5xl mx-auto py-2">
+                        <div className="space-y-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-emerald-500 transition-colors">
+                          <label className="text-sm font-bold text-emerald-800 block">رفع صور المربط {modalConfig.type === 'add' && <span className="text-red-500">*</span>}</label>
+                          <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors ${formErrors.images ? 'border-red-500 bg-red-50' : ''}`}>
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <svg className="w-8 h-8 mb-3 text-emerald-600" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" /></svg>
+                              <p className="mb-2 text-sm text-gray-500"><span className="font-semibold text-emerald-600">اضغط لرفع صور</span> أو اسحب وأفلت</p>
+                              <p className="text-xs text-gray-400">الصيغ المدعومة : صور فقط (image/*)</p>
+                            </div>
+                            <input type="file" className="hidden" multiple accept="image/*" onChange={(e) => { setFormData({ ...formData, images: [...(formData.images || []), ...Array.from(e.target.files)] }); setFormErrors({ ...formErrors, images: false }) }} />
+                          </label>
+                          {formData.images && formData.images.length > 0 && (
+                            <div className="flex gap-3 mt-4 overflow-x-auto pb-2 custom-scrollbar">
+                              {formData.images.map((img, i) => (
+                                <div key={i} className="w-20 h-20 rounded-xl border-2 border-emerald-600 overflow-hidden flex-shrink-0 shadow-md">
+                                  <img src={URL.createObjectURL(img)} alt={`preview-${i}`} className="w-full h-full object-cover" />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                          <label className="text-sm font-bold text-emerald-800">رابط فيديو المربط الترويجي (يوتيوب)</label>
+                          <div className="relative"><input type="url" placeholder="https://youtube.com/watch?v=..." value={formData.videoUrl || ''} onChange={e => setFormData({ ...formData, videoUrl: e.target.value })} className="lux-input pr-10 text-left" dir="ltr" /><i className="fab fa-youtube absolute top-4 right-4 text-gray-400"></i></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                </div>
+
+                <div className="p-6 border-t border-gray-100 bg-white flex justify-end gap-4 rounded-b-2xl shrink-0">
+                  <button onClick={handlePrevStep} className={`px-8 py-3.5 rounded-2xl font-bold text-gray-600 bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors ${currentStep === 1 ? 'hidden' : 'block'}`}>السابق</button>
+                  {currentStep < 4 ? (
+                    <button onClick={handleNextStep} className="px-10 py-3.5 rounded-2xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2">التالي <i className="fas fa-chevron-left text-xs"></i></button>
+                  ) : (
+                    <button onClick={handleSubmit} className="px-10 py-3.5 rounded-2xl font-bold text-white bg-emerald-800 hover:bg-emerald-900 shadow-lg shadow-emerald-900/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                      <i className={modalConfig.type === 'edit' ? "fas fa-save" : "fas fa-check-circle"}></i>
+                      {modalConfig.type === 'edit' ? 'حفظ التعديلات' : 'حفظ البيانات'}
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
             {/* ======================= الإضافة والتعديل للخيول (تصميم منقسم في حالة التعديل) ======================= */}
             {(modalConfig.type === 'add' || modalConfig.type === 'edit') && activeSidebarPage === 'horses' && (
               <div className="flex flex-col md:flex-row w-full">
-                
+
                 {/* البطاقة الجانبية: تظهر فقط في حالة التعديل لتعرض البيانات الحالية */}
                 {modalConfig.type === 'edit' && (
                   <div className="md:w-1/3 bg-gray-50 p-6 md:p-8 border-l border-gray-100 hidden md:block overflow-y-auto">
                     <h3 className="text-lg font-bold text-gray-800 mb-5 border-b border-gray-200 pb-3 flex items-center gap-2">
                       <i className="fas fa-info-circle text-emerald-600"></i> البيانات الحالية
                     </h3>
-                    
+
                     <div className="rounded-xl overflow-hidden shadow-sm border-4 border-white mb-5 bg-white">
                       <img src={modalConfig.data.image || 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=400'} alt={modalConfig.data.name} className="w-full h-48 object-cover" />
                     </div>
-                    
+
                     <div className="space-y-3">
                       <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                         <span className="text-xs text-gray-400 block mb-1 font-bold">الاسم الحالي</span>
@@ -881,7 +1287,7 @@ export default function Dashboard() {
                         <strong className="text-sm text-gray-800">{modalConfig.data.owner}</strong>
                       </div>
                     </div>
-                    
+
                     {/* المرفقات: السجل الطبي وشجرة النسب */}
                     <div className="mt-4 flex flex-col gap-3">
                       {modalConfig.data.healthRecordPdf ? (
@@ -922,98 +1328,100 @@ export default function Dashboard() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-5">
-                      <div className="col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">صورة الحصان</label>
-                        <div className="flex items-center justify-center w-full mt-1">
-                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                            <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
-                              <i className="fas fa-cloud-upload-alt text-3xl mb-3 text-gray-400"></i>
-                              <p className="mb-2 text-sm text-gray-500"><span className="font-semibold text-emerald-600">اضغط لرفع صورة</span> أو اسحب وأفلت</p>
-                            </div>
-                            <input type="file" name="image" accept="image/*" onChange={handleInputChange} className="hidden" />
-                          </label>
-                        </div>
-                        {formData.image && (
-                          <div className="mt-3 w-24 h-24 rounded-xl overflow-hidden border-2 border-emerald-600 shadow-md">
-                            <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="col-span-2">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">صورة الحصان</label>
+                      <div className="flex items-center justify-center w-full mt-1">
+                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
+                            <i className="fas fa-cloud-upload-alt text-3xl mb-3 text-gray-400"></i>
+                            <p className="mb-2 text-sm text-gray-500"><span className="font-semibold text-emerald-600">اضغط لرفع صورة</span> أو اسحب وأفلت</p>
                           </div>
-                        )}
+                          <input type="file" name="image" accept="image/*" onChange={handleInputChange} className="hidden" />
+                        </label>
                       </div>
-                      
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">اسم الحصان</label><input required name="name" value={formData.name || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="مثال: أدهم البادية" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">اللون</label><input required name="color" value={formData.color || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="مثال: أشعل، أشقر، كميت..." /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">تاريخ الميلاد / العمر</label><input required name="age" value={formData.age || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="مثال: مايو 2021" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">المُربّي (Breeder)</label><input required name="breeder" value={formData.breeder || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="من قام بتوليد الحصان" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">المالك الحالي</label><input required name="owner" value={formData.owner || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="اسم المالك" /></div>
-                      
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">الحالة</label>
-                        <select name="status" value={formData.status || 'متاح للبيع'} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition">
-                          <option>متاح للبيع</option><option>مباع</option><option>تحت العلاج</option>
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">اسم المربط</label>
-                        <select required name="studName" value={formData.studName || ''} onChange={handleStudChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition">
-                          <option value="">اختر المربط...</option>
-                          {Object.keys(studsData).map(stud => <option key={stud} value={stud}>{stud}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">فرع المزرعة</label>
-                        <select required name="branch" value={formData.branch || ''} onChange={handleInputChange} disabled={!formData.studName} className={`w-full border border-gray-200 rounded-xl p-3 bg-gray-50 transition ${!formData.studName ? 'opacity-50 cursor-not-allowed' : 'focus:ring-2 focus:ring-emerald-600/30 outline-none'}`}>
-                          <option value="">{formData.studName ? 'اختر الفرع...' : 'اختر المربط أولاً'}</option>
-                          {formData.studName && studsData[formData.studName].map(branch => <option key={branch} value={branch}>{branch}</option>)}
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">النوع</label>
-                        <select required name="type" value={formData.type || 'فحل'} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition">
-                          <option value="فحل">فحل (ذكر بالغ)</option><option value="فرس">فرس (أنثى بالغة)</option><option value="مهر">مهر (ذكر صغير)</option><option value="مهرة">مهرة (أنثى صغيرة)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">الرَّسَن (السلالة)</label>
-                        <select required name="breed" value={formData.breed || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition">
-                          <option value="">اختر الرسن...</option><option value="صقلاوي">صقلاوي</option><option value="صقلاوي جدراني">صقلاوي جدراني</option><option value="كحيلان">كحيلان</option><option value="عبيان">عبيان</option><option value="عبية الشراك">عبية الشراك</option><option value="حمداني">حمداني</option><option value="هدبان">هدبان</option><option value="شويمان">شويمان</option><option value="معنقي">معنقي</option><option value="أخرى">أخرى</option>
-                        </select>
-                      </div>
-                      
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">اسم الأب (Sire)</label><input required type="text" name="sire" value={formData.sire || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="اسم الأب" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">اسم الأم (Dam)</label><input required type="text" name="dam" value={formData.dam || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="اسم الأم" /></div>
-                      
-                      <div className="col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">ملف السجلات الصحية</label>
-                        <div className="flex items-center w-full mt-1">
-                          <label className="flex items-center justify-center w-full h-14 border border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors px-4">
-                            <div className="flex items-center justify-center gap-3">
-                              <i className="fas fa-file-alt text-emerald-600 text-xl"></i>
-                              <span className="text-sm text-gray-600 font-bold truncate">{formData.healthRecordPdf ? (formData.healthRecordPdf.name || 'ملف مرفق') : 'اضغط لاختيار الملف (PDF)'}</span>
-                            </div>
-                            <input type="file" name="healthRecordPdf" accept="application/pdf" onChange={handleInputChange} className="hidden" />
-                          </label>
+                      {formData.image && (
+                        <div className="mt-3 w-24 h-24 rounded-xl overflow-hidden border-2 border-emerald-600 shadow-md">
+                          <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
                         </div>
-                      </div>
-                      
-                      <div className="col-span-2">
-                        <label className="block text-sm font-bold text-gray-700 mb-2">صورة شجرة النسب (Pedigree)</label>
-                        <div className="flex items-center justify-center w-full mt-1">
-                          <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                            <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
-                              <i className="fas fa-sitemap text-2xl mb-2 text-gray-400"></i>
-                              <p className="mb-1 text-sm text-gray-500"><span className="font-semibold text-emerald-600">اضغط لرفع شهادة / صورة النسب</span></p>
-                            </div>
-                            <input type="file" name="pedigreeImg" accept="image/*" onChange={handleInputChange} className="hidden" />
-                          </label>
-                        </div>
-                        {formData.pedigreeImg && (
-                          <div className="mt-3 w-24 h-24 rounded-xl overflow-hidden border-2 border-emerald-600 shadow-md">
-                            <img src={typeof formData.pedigreeImg === 'string' ? formData.pedigreeImg : URL.createObjectURL(formData.pedigreeImg)} alt="Pedigree Preview" className="w-full h-full object-cover" />
+                      )}
+                    </div>
+
+                    <div><label className="block text-sm font-bold text-gray-700 mb-2">اسم الحصان</label><input required name="name" value={formData.name || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="مثال: أدهم البادية" /></div>
+                    <div><label className="block text-sm font-bold text-gray-700 mb-2">اللون</label><input required name="color" value={formData.color || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="مثال: أشعل، أشقر، كميت..." /></div>
+                    <div><label className="block text-sm font-bold text-gray-700 mb-2">تاريخ الميلاد / العمر</label><input required name="age" value={formData.age || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="مثال: مايو 2021" /></div>
+                    <div><label className="block text-sm font-bold text-gray-700 mb-2">المُربّي (Breeder)</label><input required name="breeder" value={formData.breeder || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="من قام بتوليد الحصان" /></div>
+                    <div><label className="block text-sm font-bold text-gray-700 mb-2">المالك الحالي</label><input required name="owner" value={formData.owner || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="اسم المالك" /></div>
+
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">الحالة</label>
+                      <select name="status" value={formData.status || 'متاح للبيع'} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition">
+                        <option>متاح للبيع</option><option>مباع</option><option>تحت العلاج</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">اسم المربط</label>
+                      <select required name="studName" value={formData.studName || ''} onChange={handleStudChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition">
+                        <option value="">اختر المربط...</option>
+                        {studsDataList.map(stud => (
+                          <option key={stud.id} value={stud.name}>{stud.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">فرع المزرعة</label>
+                      <select required name="branch" value={formData.branch || ''} onChange={handleInputChange} disabled={!formData.studName} className={`w-full border border-gray-200 rounded-xl p-3 bg-gray-50 transition ${!formData.studName ? 'opacity-50 cursor-not-allowed' : 'focus:ring-2 focus:ring-emerald-600/30 outline-none'}`}>
+                        <option value="">{formData.studName ? 'اختر الفرع...' : 'اختر المربط أولاً'}</option>
+                        {formData.studName && getBranchesForStud(formData.studName).map(branch => <option key={branch} value={branch}>{branch}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">النوع</label>
+                      <select required name="type" value={formData.type || 'فحل'} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition">
+                        <option value="فحل">فحل (ذكر بالغ)</option><option value="فرس">فرس (أنثى بالغة)</option><option value="مهر">مهر (ذكر صغير)</option><option value="مهرة">مهرة (أنثى صغيرة)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 mb-2">الرَّسَن (السلالة)</label>
+                      <select required name="breed" value={formData.breed || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition">
+                        <option value="">اختر الرسن...</option><option value="صقلاوي">صقلاوي</option><option value="صقلاوي جدراني">صقلاوي جدراني</option><option value="كحيلان">كحيلان</option><option value="عبيان">عبيان</option><option value="عبية الشراك">عبية الشراك</option><option value="حمداني">حمداني</option><option value="هدبان">هدبان</option><option value="شويمان">شويمان</option><option value="معنقي">معنقي</option><option value="أخرى">أخرى</option>
+                      </select>
+                    </div>
+
+                    <div><label className="block text-sm font-bold text-gray-700 mb-2">اسم الأب (Sire)</label><input required type="text" name="sire" value={formData.sire || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="اسم الأب" /></div>
+                    <div><label className="block text-sm font-bold text-gray-700 mb-2">اسم الأم (Dam)</label><input required type="text" name="dam" value={formData.dam || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition" placeholder="اسم الأم" /></div>
+
+                    <div className="col-span-2">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">ملف السجلات الصحية</label>
+                      <div className="flex items-center w-full mt-1">
+                        <label className="flex items-center justify-center w-full h-14 border border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors px-4">
+                          <div className="flex items-center justify-center gap-3">
+                            <i className="fas fa-file-alt text-emerald-600 text-xl"></i>
+                            <span className="text-sm text-gray-600 font-bold truncate">{formData.healthRecordPdf ? (formData.healthRecordPdf.name || 'ملف مرفق') : 'اضغط لاختيار الملف (PDF)'}</span>
                           </div>
-                        )}
+                          <input type="file" name="healthRecordPdf" accept="application/pdf" onChange={handleInputChange} className="hidden" />
+                        </label>
                       </div>
+                    </div>
+
+                    <div className="col-span-2">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">صورة شجرة النسب (Pedigree)</label>
+                      <div className="flex items-center justify-center w-full mt-1">
+                        <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
+                            <i className="fas fa-sitemap text-2xl mb-2 text-gray-400"></i>
+                            <p className="mb-1 text-sm text-gray-500"><span className="font-semibold text-emerald-600">اضغط لرفع شهادة / صورة النسب</span></p>
+                          </div>
+                          <input type="file" name="pedigreeImg" accept="image/*" onChange={handleInputChange} className="hidden" />
+                        </label>
+                      </div>
+                      {formData.pedigreeImg && (
+                        <div className="mt-3 w-24 h-24 rounded-xl overflow-hidden border-2 border-emerald-600 shadow-md">
+                          <img src={typeof formData.pedigreeImg === 'string' ? formData.pedigreeImg : URL.createObjectURL(formData.pedigreeImg)} alt="Pedigree Preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mt-8 flex justify-end gap-3 pt-5 border-t border-gray-100">
@@ -1026,18 +1434,31 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* الإضافة والتعديل للنماذج الأخرى (البائعين، المزادات، إلخ) */}
-            {(modalConfig.type === 'add' || modalConfig.type === 'edit') && activeSidebarPage !== 'studs' && activeSidebarPage !== 'horses' && (
-              <form onSubmit={handleSubmit} className="p-8 max-w-2xl mx-auto">
+            {/* الإضافة والتعديل للمزادات */}
+            {(modalConfig.type === 'add' || modalConfig.type === 'edit') && activeSidebarPage === 'auctions' && (
+              <div className="p-8 max-w-2xl mx-auto">
                 <div className="flex items-center justify-between border-b border-gray-100 pb-5 mb-6">
                   <h2 className="text-xl font-bold flex items-center gap-3 text-gray-800"><div className="bg-emerald-50 w-10 h-10 rounded-full flex items-center justify-center text-emerald-600"><i className={`fas ${modalConfig.type === 'add' ? 'fa-plus' : 'fa-pen'}`}></i></div>{modalConfig.type === 'add' ? 'إضافة بيانات جديدة' : 'تعديل السجل الحالي'}</h2>
                   <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-600"><i className="fas fa-times text-xl"></i></button>
                 </div>
-                <div className="grid grid-cols-2 gap-5">
 
-                  {/* ======================= حقول صفحة المزادات ======================= */}
-                  {activeSidebarPage === 'auctions' && (
-                    <>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${currentStep === 1 ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-500'}`}>1</div>
+                    <span className={`text-sm ${currentStep === 1 ? 'text-emerald-800 font-bold' : 'text-gray-400'}`}>تفاصيل المزاد</span>
+                  </div>
+                  <div className="flex-1 h-[2px] bg-gray-200 relative">
+                    <div className="h-full bg-emerald-600 transition-all" style={{ width: currentStep === 1 ? '50%' : '100%' }}></div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${currentStep === 2 ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-500'}`}>2</div>
+                    <span className={`text-sm ${currentStep === 2 ? 'text-emerald-800 font-bold' : 'text-gray-400'}`}>المكان والخيل</span>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="">
+                  {currentStep === 1 && (
+                    <div className="grid grid-cols-2 gap-5">
                       <div className="col-span-2">
                         <label className="block text-sm font-bold text-gray-700 mb-2">صورة المزاد / الفعالية</label>
                         <div className="flex items-center justify-center w-full mt-1">
@@ -1057,10 +1478,10 @@ export default function Dashboard() {
                       </div>
 
                       <div className="col-span-2"><label className="block text-sm font-bold text-gray-700 mb-2">اسم المزاد / الفعالية</label><input required name="title" value={formData.title || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50" placeholder="مثال: مزاد إيجي هورسياس الماسي" /></div>
-                      
+
                       <div><label className="block text-sm font-bold text-gray-700 mb-2">تاريخ البدء</label><input required type="date" name="startDate" value={formData.startDate || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50" /></div>
                       <div><label className="block text-sm font-bold text-gray-700 mb-2">تاريخ الانتهاء</label><input required type="date" name="endDate" value={formData.endDate || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50" /></div>
-                      
+
                       <div><label className="block text-sm font-bold text-gray-700 mb-2">الموقع</label><input required name="location" value={formData.location || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50" placeholder="مثال: القاهرة - مصر" /></div>
                       <div>
                         <label className="block text-sm font-bold text-gray-700 mb-2">الحالة</label>
@@ -1073,44 +1494,267 @@ export default function Dashboard() {
                         <label className="block text-sm font-bold text-gray-700 mb-2">وصف المزاد</label>
                         <textarea required name="description" value={formData.description || ''} onChange={handleInputChange} rows="3" className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 resize-none" placeholder="وصف تفصيلي للفعالية..."></textarea>
                       </div>
-                    </>
+                    </div>
                   )}
 
-                  {/* ======================= حقول البائعين والمشترين والأطباء ======================= */}
-                  {activeSidebarPage === 'dashboard' && activeTab === 'البائعين' && (
-                    <>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">اسم البائع</label><input required name="seller" value={formData.seller || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">رقم الهاتف</label><input required name="phone" value={formData.phone || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-left" dir="ltr" placeholder="+966 50 000 0000" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">البريد الإلكتروني</label><input required type="email" name="email" value={formData.email || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-left" dir="ltr" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">الحالة</label><select name="status" value={formData.status || 'مكتمل'} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50"><option>مكتمل</option><option>قيد الانتظار</option><option>ملغى</option></select></div>
-                    </>
-                  )}
-                  {activeSidebarPage === 'dashboard' && activeTab === 'المشترين' && (
-                    <>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">اسم المشتري</label><input required name="name" value={formData.name || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">رقم الهاتف</label><input required name="phone" value={formData.phone || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-left" dir="ltr" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">البريد الإلكتروني</label><input required type="email" name="email" value={formData.email || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-left" dir="ltr" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">الحالة</label><select name="status" value={formData.status || 'نشط'} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50"><option>نشط</option><option>غير نشط</option></select></div>
-                    </>
-                  )}
-                  {activeSidebarPage === 'dashboard' && activeTab === 'الأطباء البيطريين' && (
-                    <>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">اسم الطبيب</label><input required name="name" value={formData.name || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">رقم الرخصة</label><input required name="license" value={formData.license || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">التخصص</label><input required name="specialty" value={formData.specialty || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">رقم الهاتف</label><input required name="phone" value={formData.phone || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-left" dir="ltr" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">البريد الإلكتروني</label><input required type="email" name="email" value={formData.email || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-left" dir="ltr" /></div>
-                      <div><label className="block text-sm font-bold text-gray-700 mb-2">الحالة</label><select name="status" value={formData.status || 'نشط'} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50"><option>نشط</option><option>غير نشط</option></select></div>
-                    </>
+                  {currentStep === 2 && (
+                    <div className="space-y-4">
+                      {formErrors.venues && (
+                        <div className="text-sm text-red-600">يرجى اختيار المربط، الفرع، وخيل واحد على الأقل في كل موقع.</div>
+                      )}
+
+                      {(formData.venues || []).map((venue, idx) => {
+                        const availableHorses = getHorsesForVenue(venue);
+                        return (
+                          <div key={idx} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                            <div className="flex items-start justify-between">
+                              <h3 className="text-sm font-bold text-gray-700">الموقع {idx + 1}</h3>
+                              {(formData.venues || []).length > 1 && (
+                                <button type="button" onClick={() => removeAuctionVenue(idx)} className="text-red-500 text-xs hover:text-red-600">حذف</button>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                              <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">المربط</label>
+                                <select value={venue.studName || ''} onChange={e => updateAuctionVenue(idx, 'studName', e.target.value)} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:ring-2 focus:ring-emerald-600/30 outline-none transition">
+                                  <option value="">اختر المربط...</option>
+                                  {studsDataList.map(stud => <option key={stud.name} value={stud.name}>{stud.name}</option>)}
+                                  {Object.keys(studsData).filter(key => !studsDataList.some(s => s.name === key)).map(stud => <option key={stud} value={stud}>{stud}</option>)}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">الفرع</label>
+                                <select value={venue.branch || ''} onChange={e => updateAuctionVenue(idx, 'branch', e.target.value)} disabled={!venue.studName} className={`w-full border border-gray-200 rounded-xl p-3 bg-gray-50 transition ${!venue.studName ? 'opacity-50 cursor-not-allowed' : 'focus:ring-2 focus:ring-emerald-600/30 outline-none'}`}>
+                                  <option value="">{venue.studName ? 'اختر الفرع...' : 'اختر المربط أولاً'}</option>
+                                  {venue.studName && getBranchesForStud(venue.studName).map(branch => <option key={branch} value={branch}>{branch}</option>)}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">الخيل</label>
+                                <select value={(venue.horseIds && venue.horseIds[0]) || ''} onChange={e => updateAuctionVenue(idx, 'horseIds', e.target.value ? [e.target.value] : [])} disabled={!venue.branch} className={`w-full border border-gray-200 rounded-xl p-3 bg-gray-50 transition ${!venue.branch ? 'opacity-50 cursor-not-allowed' : 'focus:ring-2 focus:ring-emerald-600/30 outline-none'}`}>
+                                  <option value="">{venue.branch ? 'اختر الخيل...' : 'اختر الفرع أولاً'}</option>
+                                  {venue.branch && availableHorses.length === 0 && <option value="">لا توجد خيول متاحة</option>}
+                                  {availableHorses.map(horse => (
+                                    <option key={horse.id} value={horse.id}>{horse.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      <button type="button" onClick={addAuctionVenue} className="text-sm font-bold text-emerald-600 hover:text-emerald-800">+ إضافة مربط</button>
+                    </div>
                   )}
 
+                  <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" onClick={closeModal} className="bg-gray-100 text-gray-700 px-8 py-3 rounded-xl font-bold hover:bg-gray-200 transition">إلغاء</button>
+                    {currentStep > 1 && (
+                      <button type="button" onClick={handlePrevStep} className="bg-gray-100 text-gray-700 px-8 py-3 rounded-xl font-bold hover:bg-gray-200 transition">السابق</button>
+                    )}
+                    {currentStep === 1 ? (
+                      <button type="button" onClick={handleNextStep} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow-md shadow-emerald-600/30">التالي</button>
+                    ) : (
+                      <button type="submit" className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow-md shadow-emerald-600/30">{modalConfig.type === 'add' ? 'حفظ وإضافة' : 'حفظ التعديلات'}</button>
+                    )}
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* ======================= الإضافة والتعديل للمستخدمين (بائع، مشتري، طبيب) بنسق جديد ======================= */}
+            {(modalConfig.type === 'add' || modalConfig.type === 'edit') && activeSidebarPage === 'dashboard' && (
+              <form onSubmit={handleSubmit} className="p-8 w-full max-w-4xl mx-auto">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-5 mb-8">
+                  <h2 className="text-2xl font-black flex items-center gap-3 text-gray-800">
+                    <div className="bg-emerald-50 w-12 h-12 rounded-full flex items-center justify-center text-emerald-600">
+                      <i className={`fas ${modalConfig.type === 'add' ? 'fa-user-plus' : 'fa-user-edit'}`}></i>
+                    </div>
+                    {modalConfig.type === 'add' ? `إضافة ${activeTab === 'البائعين' ? 'بائع' : activeTab === 'المشترين' ? 'مشتري' : 'طبيب'} جديد` : 'تعديل بيانات الحساب'}
+                  </h2>
+                  <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center transition">
+                    <i className="fas fa-times text-xl"></i>
+                  </button>
                 </div>
-                <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100">
-                  <button type="button" onClick={closeModal} className="bg-gray-100 text-gray-700 px-8 py-3 rounded-xl font-bold hover:bg-gray-200 transition">إلغاء</button>
-                  <button type="submit" className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow-md">{modalConfig.type === 'add' ? 'حفظ وإضافة' : 'حفظ التعديلات'}</button>
+
+                <div className="space-y-6">
+                  {/* الكارت 1: البيانات الشخصية المشتركة */}
+                  <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <h3 className="text-lg font-bold text-gray-800 mb-5 border-b border-gray-200 pb-2">
+                      <i className="fas fa-id-card text-gray-400 ml-2"></i> البيانات الأساسية
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">الاسم الكامل *</label>
+                        <input required name={activeTab === 'البائعين' ? 'seller' : 'name'} value={(activeTab === 'البائعين' ? formData.seller : formData.name) || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition" placeholder="أدخل الاسم..." />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">البريد الإلكتروني *</label>
+                        <input required type="email" name="email" value={formData.email || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-white text-left focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition" dir="ltr" placeholder="example@mail.com" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">رقم الهاتف *</label>
+                        <input required name="phone" value={formData.phone || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-white text-left focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition" dir="ltr" placeholder="+20 100 000 0000" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">الرقم القومي</label>
+                        <input name="nationalId" value={formData.nationalId || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-white text-left focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition" dir="ltr" placeholder="أدخل 14 رقم" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">حالة الحساب</label>
+                        <select name="status" value={formData.status || (activeTab === 'البائعين' ? 'مكتمل' : 'نشط')} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition">
+                          {activeTab === 'البائعين' ? (
+                            <><option value="مكتمل">مكتمل</option><option value="قيد الانتظار">قيد الانتظار</option><option value="ملغى">ملغى</option></>
+                          ) : (
+                            <><option value="نشط">نشط</option><option value="غير نشط">غير نشط</option></>
+                          )}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">كيف تعرف علينا؟</label>
+                        <select name="howDidYouHear" value={formData.howDidYouHear || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition">
+                          <option value="">اختر...</option>
+                          <option value="فيسبوك">فيسبوك</option>
+                          <option value="تويتر / إكس">تويتر / إكس</option>
+                          <option value="إنستجرام">إنستجرام</option>
+                          <option value="محرك بحث جوجل">محرك بحث جوجل</option>
+                          <option value="صديق / معارف">صديق / معارف</option>
+                          <option value="أخرى">أخرى</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* الكارت 2: التفاصيل الإضافية المتغيرة */}
+                  <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                    <h3 className="text-lg font-bold text-emerald-700 mb-5 border-b border-gray-100 pb-2">
+                      <i className="fas fa-info-circle text-emerald-500 ml-2"></i> التفاصيل الإضافية ({activeTab})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {activeTab === 'البائعين' && (
+                        <>
+                          <div><label className="block text-sm font-bold text-gray-700 mb-2">اسم المزرعة / الإسطبل</label><input name="farmName" value={formData.farmName || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:border-emerald-500 outline-none transition" placeholder="إن وجد" /></div>
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">صفة البائع</label>
+                            <select name="sellerRole" value={formData.sellerRole || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:border-emerald-500 outline-none transition">
+                              <option value="">اختر صفة...</option>
+                              <option value="مربي">مربي</option>
+                              <option value="وسيط">وسيط</option>
+                              <option value="مالك خاص">مالك خاص</option>
+                            </select>
+                          </div>
+                          <div><label className="block text-sm font-bold text-gray-700 mb-2">رقم السجل التجاري</label><input name="commercialRegister" value={formData.commercialRegister || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-left focus:border-emerald-500 outline-none transition" dir="ltr" /></div>
+                          <div><label className="block text-sm font-bold text-gray-700 mb-2">سنوات الخبرة</label><input name="experienceYears" type="number" value={formData.experienceYears || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:border-emerald-500 outline-none transition" placeholder="مثال: 5" /></div>
+                          <div className="md:col-span-2"><label className="block text-sm font-bold text-gray-700 mb-2">العنوان</label><input name="address" value={formData.address || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:border-emerald-500 outline-none transition" placeholder="العنوان التفصيلي للمزرعة أو البائع" /></div>
+                        </>
+                      )}
+
+                      {activeTab === 'المشترين' && (
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-bold text-gray-700 mb-2">المحافظة</label>
+                          <select name="governorate" value={formData.governorate || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:border-emerald-500 outline-none transition">
+                            <option value="">اختر المحافظة...</option>
+                            {egyptGovernorates.map(gov => <option key={gov} value={gov}>{gov}</option>)}
+                          </select>
+                        </div>
+                      )}
+
+                      {activeTab === 'الأطباء البيطريين' && (
+                        <>
+                          <div><label className="block text-sm font-bold text-gray-700 mb-2">الدولة / المدينة</label><input name="countryCity" value={formData.countryCity || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:border-emerald-500 outline-none transition" placeholder="مثال: مصر / القاهرة" /></div>
+                          <div><label className="block text-sm font-bold text-gray-700 mb-2">رقم الرخصة *</label><input required name="license" value={formData.license || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-left focus:border-emerald-500 outline-none transition" dir="ltr" placeholder="VET-XXXXX" /></div>
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">التخصص</label>
+                            <select name="specialty" value={formData.specialty || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:border-emerald-500 outline-none transition">
+                              <option value="">اختر التخصص...</option>
+                              <option value="طب بيطري خيول">طب بيطري خيول</option>
+                              <option value="جراحة">جراحة</option>
+                              <option value="طب بيطري عام">طب بيطري عام</option>
+                            </select>
+                          </div>
+                          <div><label className="block text-sm font-bold text-gray-700 mb-2">سنوات الخبرة</label><input name="experienceYears" type="number" value={formData.experienceYears || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:border-emerald-500 outline-none transition" placeholder="مثال: 7" /></div>
+                          <div className="md:col-span-2"><label className="block text-sm font-bold text-gray-700 mb-2">العيادات أو المستشفيات</label><input name="clinicsWorkedAt" value={formData.clinicsWorkedAt || ''} onChange={handleInputChange} className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:border-emerald-500 outline-none transition" placeholder="أين يعمل الطبيب؟" /></div>
+                          <div className="md:col-span-2"><label className="block text-sm font-bold text-gray-700 mb-2">نبذة وخبرات عن الطبيب</label><textarea name="vetBio" value={formData.vetBio || ''} onChange={handleInputChange} rows="3" className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 resize-none focus:border-emerald-500 outline-none transition" placeholder="اكتب نبذة عن الطبيب وخبراته السابقة..."></textarea></div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* الكارت 3: المرفقات والمستندات (لا يظهر للمشترين) */}
+                  {activeTab !== 'المشترين' && (
+                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                      <h3 className="text-lg font-bold text-emerald-700 mb-5 border-b border-gray-100 pb-2">
+                        <i className="fas fa-folder-open text-emerald-500 ml-2"></i> المرفقات والمستندات
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {/* البطاقة الشخصية مشتركة للبائع والطبيب */}
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">البطاقة الشخصية (صورة أو PDF)</label>
+                          <label className="flex items-center justify-center w-full h-14 border border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition px-4 overflow-hidden">
+                            <i className={`fas fa-file-${formData.nationalIdFile ? 'check text-emerald-600' : 'upload text-gray-400'} ml-2 text-xl`}></i>
+                            <span className="text-sm text-gray-600 font-bold truncate">
+                              {formData.nationalIdFile ? (typeof formData.nationalIdFile === 'object' ? formData.nationalIdFile.name : 'تم إرفاق ملف البطاقة') : 'اضغط لإرفاق البطاقة'}
+                            </span>
+                            <input type="file" name="nationalIdFile" accept="image/*,application/pdf" onChange={handleInputChange} className="hidden" />
+                          </label>
+                        </div>
+
+                        {activeTab === 'البائعين' && (
+                          <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">خطاب الترخيص / السجل</label>
+                            <label className="flex items-center justify-center w-full h-14 border border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition px-4 overflow-hidden">
+                              <i className={`fas fa-file-${formData.recommendationLetter ? 'check text-emerald-600' : 'upload text-gray-400'} ml-2 text-xl`}></i>
+                              <span className="text-sm text-gray-600 font-bold truncate">
+                                {formData.recommendationLetter ? (typeof formData.recommendationLetter === 'object' ? formData.recommendationLetter.name : 'تم إرفاق ملف الترخيص') : 'اضغط لإرفاق المستند'}
+                              </span>
+                              <input type="file" name="recommendationLetter" accept="image/*,application/pdf" onChange={handleInputChange} className="hidden" />
+                            </label>
+                          </div>
+                        )}
+
+                        {activeTab === 'الأطباء البيطريين' && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-bold text-gray-700 mb-2">رخصة المزاولة</label>
+                              <label className="flex items-center justify-center w-full h-14 border border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition px-4 overflow-hidden">
+                                <i className={`fas fa-file-${formData.licenseFile ? 'check text-emerald-600' : 'upload text-gray-400'} ml-2 text-xl`}></i>
+                                <span className="text-sm text-gray-600 font-bold truncate">
+                                  {formData.licenseFile ? (typeof formData.licenseFile === 'object' ? formData.licenseFile.name : 'تم إرفاق رخصة المزاولة') : 'اضغط لإرفاق الرخصة'}
+                                </span>
+                                <input type="file" name="licenseFile" accept="image/*,application/pdf" onChange={handleInputChange} className="hidden" />
+                              </label>
+                            </div>
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-bold text-gray-700 mb-2">الشهادات والخبرات المرفقة</label>
+                              <label className="flex items-center justify-center w-full h-14 border border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition px-4 overflow-hidden">
+                                <i className={`fas fa-file-${formData.vetCertificates ? 'check text-emerald-600' : 'upload text-gray-400'} ml-2 text-xl`}></i>
+                                <span className="text-sm text-gray-600 font-bold truncate">
+                                  {formData.vetCertificates ? (typeof formData.vetCertificates === 'object' ? formData.vetCertificates.name : 'تم إرفاق ملف الشهادات') : 'اضغط لإرفاق الشهادات'}
+                                </span>
+                                <input type="file" name="vetCertificates" accept="image/*,application/pdf" onChange={handleInputChange} className="hidden" />
+                              </label>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-8 flex justify-end gap-4 pt-6 border-t border-gray-100">
+                  <button type="button" onClick={closeModal} className="bg-gray-100 text-gray-700 px-8 py-3.5 rounded-xl font-bold hover:bg-gray-200 transition">إلغاء الأمر</button>
+                  <button type="submit" className="bg-emerald-600 text-white px-8 py-3.5 rounded-xl font-bold hover:bg-emerald-700 transition shadow-md shadow-emerald-600/30 flex items-center gap-2">
+                    <i className="fas fa-save"></i>
+                    {modalConfig.type === 'add' ? 'حفظ الحساب الجديد' : 'تحديث بيانات الحساب'}
+                  </button>
                 </div>
               </form>
             )}
+
           </div>
         </div>
       )}
@@ -1122,53 +1766,55 @@ export default function Dashboard() {
             <div className="bg-emerald-600 min-w-[40px] h-10 flex items-center justify-center rounded-lg shadow-lg"><i className="fas fa-horse-head text-xl text-white"></i></div>
             <div><h1 className="font-bold text-lg leading-tight">نظام إدارة الخيول</h1><p className="text-[11px] text-gray-400">لوحة التحكم الإدارية</p></div>
           </div>
-          
+
           <nav className="space-y-2 px-4 text-sm font-medium">
+            {/* --- زر طلبات التسجيل الجديد --- */}
+            <button onClick={() => setActiveSidebarPage('requests')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${activeSidebarPage === 'requests' ? 'bg-emerald-600 text-white shadow-md' : 'hover:bg-gray-800 text-gray-400'}`}>
+              <i className="fas fa-user-clock w-5 text-center"></i> طلبات التسجيل
+            </button>
             <button onClick={() => setActiveSidebarPage('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${activeSidebarPage === 'dashboard' ? 'bg-emerald-600 text-white shadow-md' : 'hover:bg-gray-800 text-gray-400'}`}>
               <i className="fas fa-users w-5 text-center"></i> المستخدمين
-            </button>
-            <button onClick={() => setActiveSidebarPage('horses')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${activeSidebarPage === 'horses' ? 'bg-emerald-600 text-white shadow-md' : 'hover:bg-gray-800 text-gray-400'}`}>
-              <i className="fas fa-horse w-5 text-center"></i> الخيول
             </button>
             <button onClick={() => setActiveSidebarPage('studs')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${activeSidebarPage === 'studs' ? 'bg-emerald-600 text-white shadow-md' : 'hover:bg-gray-800 text-gray-400'}`}>
               <i className="fas fa-building w-5 text-center"></i> المرابط والفروع
             </button>
+            <button onClick={() => setActiveSidebarPage('horses')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${activeSidebarPage === 'horses' ? 'bg-emerald-600 text-white shadow-md' : 'hover:bg-gray-800 text-gray-400'}`}>
+              <i className="fas fa-horse w-5 text-center"></i> الخيول
+            </button>
             <button onClick={() => setActiveSidebarPage('auctions')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${activeSidebarPage === 'auctions' ? 'bg-emerald-600 text-white shadow-md' : 'hover:bg-gray-800 text-gray-400'}`}>
               <i className="fas fa-gavel w-5 text-center"></i> المزادات والفعاليات
             </button>
-            <button onClick={() => setActiveSidebarPage('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${activeSidebarPage === 'settings' ? 'bg-emerald-600 text-white shadow-md' : 'hover:bg-gray-800 text-gray-400'}`}>
-              <i className="fas fa-cog w-5 text-center"></i> الإعدادات
-            </button>
           </nav>
         </div>
-        <div className="p-4 bg-gray-800 flex items-center justify-between m-4 rounded-xl cursor-pointer">
-           <div><h4 className="text-white text-sm font-semibold">{adminData.name}</h4><p className="text-xs text-gray-400">مدير النظام</p></div>
+
+        <div onClick={() => navigate('/profile/admin')} className="p-4 bg-gray-800 flex items-center justify-between m-4 rounded-xl cursor-pointer hover:bg-gray-700 transition">
+          <div>
+            <h4 className="text-white text-sm font-semibold">أفنان احمد</h4>
+            <p className="text-xs text-gray-400">مدير النظام</p>
+          </div>
           <div className="bg-[#e2e8f0] w-10 h-10 flex items-center justify-center rounded-full"><i className="fas fa-user text-gray-900"></i></div>
         </div>
       </aside>
 
       {/* ================= محتوى الصفحة ================= */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        
-        {/* Header */}
+
         <header className="bg-white px-8 py-4 flex items-center justify-between border-b border-gray-100 z-10">
           <div className="flex items-center gap-8">
             <h2 className="text-xl font-bold text-gray-800">
-              {activeSidebarPage === 'dashboard' ? 'إدارة المستخدمين' : 
-               activeSidebarPage === 'orders' ? 'إدارة الطلبات الشاملة' :
-               activeSidebarPage === 'horses' ? 'سجل الخيول والملاك' :
-               activeSidebarPage === 'studs' ? 'إدارة المرابط والفروع' :
-               activeSidebarPage === 'auctions' ? 'إدارة المزادات والفعاليات' :
-               activeSidebarPage === 'medical' ? 'الرعاية والسجلات الطبية' : 'إعدادات النظام'}
+              {activeSidebarPage === 'dashboard' ? 'إدارة المستخدمين' :
+                activeSidebarPage === 'horses' ? 'سجل الخيول والملاك' :
+                  activeSidebarPage === 'studs' ? 'إدارة المرابط والفروع' :
+                    activeSidebarPage === 'auctions' ? 'إدارة المزادات والفعاليات' :
+                      activeSidebarPage === 'requests' ? 'مراجعة طلبات التسجيل' : // العنوان الجديد
+                        'الرعاية والسجلات الطبية'}
             </h2>
-            {activeSidebarPage !== 'settings' && (
-              <div className="relative w-80">
-                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="بحث سريع..." className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2.5 pr-10 pl-4 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-600" />
-                <i className="fas fa-search absolute right-3.5 top-3.5 text-gray-400"></i>
-              </div>
-            )}
+            <div className="relative w-80">
+              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="بحث سريع..." className="w-full bg-gray-50 border border-gray-200 rounded-lg py-2.5 pr-10 pl-4 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-600" />
+              <i className="fas fa-search absolute right-3.5 top-3.5 text-gray-400"></i>
+            </div>
           </div>
-          
+
           <div className="flex items-center gap-6">
             <div className="flex gap-5 text-gray-500 text-lg relative">
               <div ref={notifRef} className="relative">
@@ -1200,7 +1846,6 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* منطقة المحتوى القابلة للتمرير */}
         <div className="flex-1 overflow-auto p-8 bg-gray-50/50">
 
           {/* ======================= صفحة إدارة المستخدمين ======================= */}
@@ -1232,17 +1877,17 @@ export default function Dashboard() {
                       {isFilterOpen && (
                         <div className="absolute top-full left-0 mt-2 w-40 bg-white border border-gray-100 shadow-xl rounded-xl py-2 z-20">
                           <p className="px-4 py-2 text-xs font-bold text-gray-400 uppercase border-b border-gray-50 mb-1">تصفية حسب:</p>
-                          <button onClick={() => {setFilterStatus('الكل'); setIsFilterOpen(false);}} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'الكل' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>الكل</button>
+                          <button onClick={() => { setFilterStatus('الكل'); setIsFilterOpen(false); }} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'الكل' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>الكل</button>
                           {activeTab === 'البائعين' ? (
                             <>
-                              <button onClick={() => {setFilterStatus('مكتمل'); setIsFilterOpen(false);}} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'مكتمل' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>مكتمل</button>
-                              <button onClick={() => {setFilterStatus('قيد الانتظار'); setIsFilterOpen(false);}} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'قيد الانتظار' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>قيد الانتظار</button>
-                              <button onClick={() => {setFilterStatus('ملغى'); setIsFilterOpen(false);}} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'ملغى' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>ملغى</button>
+                              <button onClick={() => { setFilterStatus('مكتمل'); setIsFilterOpen(false); }} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'مكتمل' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>مكتمل</button>
+                              <button onClick={() => { setFilterStatus('قيد الانتظار'); setIsFilterOpen(false); }} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'قيد الانتظار' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>قيد الانتظار</button>
+                              <button onClick={() => { setFilterStatus('ملغى'); setIsFilterOpen(false); }} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'ملغى' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>ملغى</button>
                             </>
                           ) : (
                             <>
-                              <button onClick={() => {setFilterStatus('نشط'); setIsFilterOpen(false);}} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'نشط' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>نشط</button>
-                              <button onClick={() => {setFilterStatus('غير نشط'); setIsFilterOpen(false);}} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'غير نشط' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>غير نشط</button>
+                              <button onClick={() => { setFilterStatus('نشط'); setIsFilterOpen(false); }} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'نشط' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>نشط</button>
+                              <button onClick={() => { setFilterStatus('غير نشط'); setIsFilterOpen(false); }} className={`w-full text-start px-4 py-2 text-sm hover:bg-emerald-50 transition ${filterStatus === 'غير نشط' ? 'text-emerald-600 font-bold' : 'text-gray-600'}`}>غير نشط</button>
                             </>
                           )}
                         </div>
@@ -1459,7 +2104,6 @@ export default function Dashboard() {
                       <th className="py-5 px-6 text-center">النوع</th>
                       <th className="py-5 px-6 text-center">المحافظة</th>
                       <th className="py-5 px-6 text-center">معلومات التواصل</th>
-                      <th className="py-5 px-6 text-center">الحالة</th>
                       <th className="py-5 px-6 text-center">الخيارات</th>
                     </tr>
                   </thead>
@@ -1471,21 +2115,18 @@ export default function Dashboard() {
                           <div className="flex items-center gap-3">
                             <img src={stud.image} alt="Stud" className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100" />
                             <div>
-                                <span className="font-bold text-gray-800 block">{stud.name}</span>
-                                <span className="text-xs text-gray-400 block">{stud.nameEn}</span>
+                              <span className="font-bold text-gray-800 block">{stud.name}</span>
+                              <span className="text-xs text-gray-400 block">{stud.nameEn}</span>
                             </div>
                           </div>
                         </td>
                         <td className="py-5 px-6 text-sm text-center font-medium text-gray-600">{stud.type}</td>
                         <td className="py-5 px-6 text-sm text-center font-bold text-gray-700">{stud.city}</td>
                         <td className="py-5 px-6 text-sm text-gray-500 font-medium text-center">
-                            <div className="flex flex-col gap-1 items-center">
-                                <div className="flex items-center gap-2"><span dir="ltr">{stud.email}</span></div>
-                                <div className="flex items-center gap-2"><span dir="ltr">{stud.phone}</span></div>
-                            </div>
-                        </td>
-                        <td className="py-5 px-6 text-sm text-center">
-                          <span className={`px-4 py-1.5 rounded-full text-xs font-bold ${getOrderStatusStyle(stud.status)}`}>{stud.status}</span>
+                          <div className="flex flex-col gap-1 items-center">
+                            <div className="flex items-center gap-2"><span dir="ltr">{stud.email}</span></div>
+                            <div className="flex items-center gap-2"><span dir="ltr">{stud.phone}</span></div>
+                          </div>
                         </td>
                         <td className="py-5 px-6 text-sm flex justify-center gap-4 mt-3">
                           <button onClick={() => openModal('view', stud)} className="text-gray-400 hover:text-emerald-600 transition"><i className="fas fa-eye text-lg"></i></button>
@@ -1540,7 +2181,7 @@ export default function Dashboard() {
                           <div className="flex items-center gap-3">
                             <img src={auction.image} alt="Auction" className="w-12 h-12 rounded-lg object-cover shadow-sm border border-gray-100" />
                             <div>
-                                <span className="font-bold text-gray-800 block truncate max-w-[200px]">{auction.title}</span>
+                              <span className="font-bold text-gray-800 block truncate max-w-[200px]">{auction.title}</span>
                             </div>
                           </div>
                         </td>
@@ -1562,160 +2203,84 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* ======================= صفحة الإعدادات ======================= */}
-          {activeSidebarPage === 'settings' && (
-            <div className="animate-fade-in-up max-w-4xl mx-auto">
-              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mb-8">
-                <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-100">
-                  <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl shadow-inner"><i className="fas fa-cogs"></i></div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-800">إعدادات النظام</h2>
-                    <p className="text-gray-500 text-sm mt-1">إدارة تفاصيل الحساب، الإشعارات، والأمان.</p>
-                  </div>
+          {/* ======================= صفحة طلبات التسجيل (الجديدة) ======================= */}
+          {activeSidebarPage === 'requests' && (
+            <div className="animate-fade-in-up">
+              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 mb-8 flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">مراجعة طلبات التسجيل</h2>
+                  <p className="text-gray-500">مراجعة طلبات الانضمام للمنصة من البائعين والأطباء البيطريين والمشترين.</p>
                 </div>
+                <div className="bg-emerald-50 text-emerald-600 px-6 py-3 rounded-xl font-bold border border-emerald-100">
+                  {registrationRequests.filter(r => r.status === 'قيد الانتظار').length} طلبات جديدة
+                </div>
+              </div>
 
-                <div className="space-y-8">
-                  {/* إعدادات الملف الشخصي */}
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><i className="fas fa-user-circle text-gray-400"></i> معلومات الحساب</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">الاسم الكامل</label>
-                        <input 
-                          type="text" 
-                          value={settingsInput.name} 
-                          onChange={(e) => setSettingsInput({...settingsInput, name: e.target.value})}
-                          className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-600/50" 
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">البريد الإلكتروني</label>
-                        <input 
-                          type="email" 
-                          value={settingsInput.email}
-                          onChange={(e) => setSettingsInput({...settingsInput, email: e.target.value})}
-                          dir="ltr" 
-                          className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-left focus:outline-none focus:ring-2 focus:ring-emerald-600/50" 
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">رقم الهاتف</label>
-                        <input 
-                          type="tel" 
-                          value={settingsInput.phone}
-                          onChange={(e) => setSettingsInput({...settingsInput, phone: e.target.value})}
-                          dir="ltr" 
-                          className="w-full border border-gray-200 rounded-xl p-3 bg-gray-50 text-left focus:outline-none focus:ring-2 focus:ring-emerald-600/50" 
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* إعدادات الأمان وتغيير كلمة المرور */}
-                  <div className="pt-6 border-t border-gray-100">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                        <i className="fas fa-shield-alt text-gray-400"></i> إعدادات الأمان
-                      </h3>
-                      <button 
-                        onClick={() => {
-                          setIsPasswordChangeOpen(!isPasswordChangeOpen);
-                          if(isPasswordChangeOpen){
-                             setSettingsInput(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
-                          }
-                        }}
-                        className={`px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 ${isPasswordChangeOpen ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                      >
-                        <i className={`fas ${isPasswordChangeOpen ? 'fa-times' : 'fa-lock'}`}></i>
-                        {isPasswordChangeOpen ? 'إلغاء التغيير' : 'تغيير كلمة المرور'}
-                      </button>
-                    </div>
-
-                    {isPasswordChangeOpen && (
-                      <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 animate-fade-in-up">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">كلمة المرور الحالية</label>
-                            <input 
-                              type="password" 
-                              value={settingsInput.currentPassword}
-                              onChange={(e) => setSettingsInput({...settingsInput, currentPassword: e.target.value})}
-                              className="w-full border border-gray-200 rounded-xl p-3 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/50 text-left" 
-                              dir="ltr"
-                              placeholder="••••••••"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">كلمة المرور الجديدة</label>
-                            <input 
-                              type="password" 
-                              value={settingsInput.newPassword}
-                              onChange={(e) => setSettingsInput({...settingsInput, newPassword: e.target.value})}
-                              className="w-full border border-gray-200 rounded-xl p-3 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/50 text-left" 
-                              dir="ltr"
-                              placeholder="••••••••"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">تأكيد كلمة المرور الجديدة</label>
-                            <input 
-                              type="password" 
-                              value={settingsInput.confirmPassword}
-                              onChange={(e) => setSettingsInput({...settingsInput, confirmPassword: e.target.value})}
-                              className="w-full border border-gray-200 rounded-xl p-3 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/50 text-left" 
-                              dir="ltr"
-                              placeholder="••••••••"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* إعدادات النظام والإشعارات */}
-                  <div className="pt-6 border-t border-gray-100">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><i className="fas fa-bell text-gray-400"></i> تفضيلات النظام</h3>
-                    <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 space-y-4">
-                      
-                      {/* زر الإشعارات */}
-                      <div className="flex items-center justify-between">
-                        <div><h4 className="font-bold text-sm text-gray-800">تلقي إشعارات البريد</h4><p className="text-xs text-gray-500 mt-1">إرسال ملخص يومي بالطلبات الجديدة وحالة الخيول.</p></div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" className="sr-only peer" defaultChecked />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[-100%] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                        </label>
-                      </div>
-
-                      {/* زر تفعيل الوضع الداكن */}
-                      <div className="flex items-center justify-between border-t border-gray-200 pt-4">
-                        <div>
-                          <h4 className="font-bold text-sm text-gray-800">تفعيل الوضع الداكن</h4>
-                          <p className="text-xs text-gray-500 mt-1">تغيير ألوان الواجهة إلى الألوان الداكنة لإراحة العين.</p>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            className="sr-only peer" 
-                            checked={isDarkMode} 
-                            onChange={() => setIsDarkMode(!isDarkMode)} 
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[-100%] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                        </label>
-                      </div>
-
-                    </div>
-                  </div>
-
-                  {/* حفظ */}
-                  <div className="flex justify-end pt-4 border-t border-gray-100">
-                    <button 
-                      onClick={handleSaveSettings}
-                      className={`px-8 py-3 rounded-xl font-bold shadow-md transition-all duration-300 ${saveStatus === 'saved' ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
+              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white">
+                  <h3 className="text-xl font-bold text-gray-800">قائمة الطلبات</h3>
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="bg-gray-50 border border-gray-200 text-gray-600 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2.5 outline-none"
                     >
-                      {saveStatus === 'saved' ? 'تم الحفظ بنجاح ✓' : 'حفظ التغييرات'}
+                      <option value="الكل">كل الحالات</option>
+                      <option value="قيد الانتظار">قيد الانتظار</option>
+                      <option value="مكتمل">مكتمل</option>
+                      <option value="مرفوض">مرفوض</option>
+                    </select>
+                    <button onClick={handleDownloadCSV} className="w-10 h-10 flex items-center justify-center border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition" title="تصدير">
+                      <i className="fas fa-download"></i>
                     </button>
                   </div>
                 </div>
+
+                <table className="w-full text-right">
+                  <thead className="bg-gray-50/50 text-gray-500 text-sm font-semibold border-b border-gray-100">
+                    <tr>
+                      <th className="py-5 px-6">رقم الطلب</th>
+                      <th className="py-5 px-6">مقدم الطلب</th>
+                      <th className="py-5 px-6 text-center">نوع الحساب</th>
+                      <th className="py-5 px-6 text-center">تاريخ التقديم</th>
+                      <th className="py-5 px-6 text-center">الحالة</th>
+                      <th className="py-5 px-6 text-center">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {processedData.length > 0 ? processedData.map((request) => (
+                      <tr key={request.id} className="hover:bg-gray-50 transition">
+                        <td className="py-5 px-6 text-sm font-bold text-gray-700">{request.id}</td>
+                        <td className="py-5 px-6 text-sm">
+                          <span className="font-bold text-gray-800 block">{request.fullName || request.name || request.seller || request.email || '-'}</span>
+                          <span className="text-xs text-gray-400 block" dir="ltr">{request.phoneNumber || request.phone || request.email || ''}</span>
+                        </td>
+                        <td className="py-5 px-6 text-sm text-center">
+                          <span className={`px-3 py-1 rounded-md text-xs font-bold ${request.role === 'Seller' ? 'bg-purple-50 text-purple-600 border border-purple-100' :
+                              request.role === 'EquineVet' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                                'bg-gray-100 text-gray-600 border border-gray-200'
+                            }`}>
+                            {request.type}
+                          </span>
+                        </td>
+                        <td className="py-5 px-6 text-sm text-center font-medium text-gray-600" dir="ltr">{request.date}</td>
+                        <td className="py-5 px-6 text-sm text-center">
+                          <span className={`px-4 py-1.5 rounded-full text-xs font-bold ${getOrderStatusStyle(request.status)}`}>{request.status}</span>
+                        </td>
+                        <td className="py-5 px-6 text-sm flex justify-center gap-3 mt-1">
+                          {/* --- تعديل: إزالة علامتي الصح والخطأ والاحتفاظ بـ "مراجعة" فقط --- */}
+                          <button onClick={() => openModal('view', request)} className="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                            <i className="fas fa-eye"></i> مراجعة
+                          </button>
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan="6" className="text-center py-10 text-gray-500 font-medium">لا توجد طلبات مطابقة للبحث</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}

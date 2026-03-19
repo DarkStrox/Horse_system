@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import { userApi } from '../api/api';
 import Navbar from './Navbar';
 
 const ResetPassword = () => {
@@ -32,7 +32,7 @@ const ResetPassword = () => {
         setError('');
 
         try {
-            await axios.post('/api/Account/reset-password', {
+            await userApi.resetPassword({
                 email,
                 token,
                 newPassword: passwords.newPassword

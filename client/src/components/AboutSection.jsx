@@ -24,17 +24,7 @@ const AboutSection = () => {
                         الأصيلة، وتوفير بيئة موثوقة للمربين والهواة لتوثيق، تداول،
                         والاحتفاء بهذا الإرث العظيم.
                     </p>
-
-                    <button className="flex items-center space-x-reverse space-x-4 text-gray-600 dark:text-gray-300 font-bold hover:text-green-500 transition group bg-gray-50 dark:bg-gray-900/50 px-8 py-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md">
-                        <div className="w-12 h-12 rounded-full border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center group-hover:border-green-500 transition bg-white dark:bg-gray-800">
-                            <i className="fas fa-play text-xs"></i>
-                        </div>
-                        <span className="text-lg">
-                            شاهد الفيديو التعريفي
-                        </span>
-                    </button>
                 </div>
-
                 <div className="w-full lg:w-1/2 relative">
                     <div className="relative z-10 rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white dark:border-gray-900">
                         <img

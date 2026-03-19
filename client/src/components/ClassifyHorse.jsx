@@ -332,7 +332,7 @@ const ClassifyHorse = () => {
                                         <p className="text-sm font-bold text-[#b4e8c6] mb-1">{result.details}</p>
                                         <h2 className="text-3xl font-black text-white whitespace-pre-line">
                                             {result.type}
-                                            {!(result.type.includes('عربي') || result.type.toLowerCase().includes('arabian')) && (
+                                            {mode === 'image' && !(result.type.includes('عربي') || result.type.toLowerCase().includes('arabian')) && (
                                                 <span className="text-sm font-bold text-red-400 mr-2 block mt-1">
                                                     (غير عربي - Not Arabian)
                                                 </span>

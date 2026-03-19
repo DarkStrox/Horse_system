@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import { horseApi } from '../api/api';
 
 const AddHorse = () => {
     const navigate = useNavigate();
-    const location = useLocation();
     const [loading, setLoading] = useState(false);
-    const [user, setUser] = useState(null);
     const [formData, setFormData] = useState({
         microchipId: '',
         name: '',
@@ -30,11 +29,10 @@ const AddHorse = () => {
             return;
         }
 
-        axios.get('http://localhost:5000/api/profile', {
+        axios.get('/api/account/profile', {
             headers: { Authorization: `Bearer ${token}` }
         })
             .then(res => {
-                setUser(res.data);
                 // Check role: allow Seller or Admin
                 if (res.data.role !== 'Seller' && res.data.role !== 'Admin') {
                     alert("يجب أن يكون لديك حساب 'بائع' لعرض خيل للبيع.");
@@ -45,7 +43,7 @@ const AddHorse = () => {
                 console.error(err);
                 navigate('/login');
             });
-    }, [navigate, location.pathname]);
+    }, [navigate]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -69,13 +67,6 @@ const AddHorse = () => {
         e.preventDefault();
         setLoading(true);
 
-        // Basic validation
-        if (!formData.name || !formData.microchipId) {
-            alert("يرجى ملء الحقول المطلوبة (بما في ذلك رقم التسجيل).");
-            setLoading(false);
-            return;
-        }
-
         const data = new FormData();
         data.append('microchipId', formData.microchipId);
         data.append('name', formData.name);
@@ -91,15 +82,9 @@ const AddHorse = () => {
         if (formData.videoFile) data.append('videoFile', formData.videoFile);
 
         try {
-            const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/horse', data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            await horseApi.createHorse(data);
             alert("تم إضافة الخيل إلى النظام بنجاح.");
-            navigate('/sales');
+            navigate('/horses');
         } catch (err) {
             console.error(err);
             alert(err.response?.data?.message || "حدث خطأ أثناء إرسال الطلب.");
@@ -112,147 +97,138 @@ const AddHorse = () => {
         <div className="bg-[#FAFBF9] dark:bg-gray-950 min-h-screen font-sans text-right" dir="rtl">
             <Navbar />
 
-            <div className="container mx-auto px-4 py-12 flex justify-center">
-                <div className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-xl p-8 md:p-12 border border-gray-100 dark:border-gray-800">
-                    <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">إضافة خيل للنظام</h2>
-                    <p className="text-gray-400 mb-8">أدخل تفاصيل الخيل لتسجيلها في قاعدتنا البيانية.</p>
+            <div className="container mx-auto px-4 py-32 flex justify-center">
+                <div className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-[3rem] shadow-2xl p-10 md:p-14 border border-gray-100 dark:border-gray-800">
+                    <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-4 underline decoration-emerald-500 decoration-8 underline-offset-8">إضافة خيل للنظام</h2>
+                    <p className="text-gray-400 mb-12 font-bold uppercase tracking-widest text-xs">أدخل تفاصيل الخيل لتسجيلها في قاعدتنا البيانية.</p>
 
-                    <form onSubmit={handleSubmit} className="space-y-6" encType="multipart/form-data">
-                        {/* Microchip ID */}
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">رقم الشريحة (Microchip ID) *</label>
+                    <form onSubmit={handleSubmit} className="space-y-8" encType="multipart/form-data">
+                        <div className="space-y-2">
+                            <label className="block text-sm font-black text-gray-700 dark:text-gray-300">رقم الشريحة (MICROCHIP ID) *</label>
                             <input
                                 type="text"
                                 name="microchipId"
                                 value={formData.microchipId}
                                 onChange={handleChange}
-                                className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition"
+                                className="w-full bg-gray-50 dark:bg-gray-800 p-5 rounded-[2rem] outline-none border-2 border-transparent focus:border-emerald-500 transition-all font-bold dark:text-white"
                                 placeholder="مثال: H005 (يجب أن يكون فريداً)"
                                 required
                             />
                         </div>
 
-                        {/* Name & Breed */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">اسم الخيل *</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <label className="block text-sm font-black text-gray-700 dark:text-gray-300">اسم الخيل *</label>
                                 <input
                                     type="text"
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 p-5 rounded-[2rem] outline-none border-2 border-transparent focus:border-emerald-500 transition-all font-bold dark:text-white"
                                     placeholder="اسم الخيل"
                                     required
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">السلالة</label>
+                            <div className="space-y-2">
+                                <label className="block text-sm font-black text-gray-700 dark:text-gray-300">السلالة (BREED)</label>
                                 <input
                                     type="text"
                                     name="breed"
                                     value={formData.breed}
                                     onChange={handleChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 p-5 rounded-[2rem] outline-none border-2 border-transparent focus:border-emerald-500 transition-all font-bold dark:text-white"
                                     placeholder="مثال: صقلاوي"
                                 />
                             </div>
                         </div>
 
-                        {/* Gender & Age */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">الجنس</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <label className="block text-sm font-black text-gray-700 dark:text-gray-300">الجنس (GENDER)</label>
                                 <select
                                     name="gender"
                                     value={formData.gender}
                                     onChange={handleChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 p-5 rounded-[2rem] outline-none border-2 border-transparent focus:border-emerald-500 transition-all font-bold dark:text-white appearance-none"
                                 >
-                                    <option value="Male">ذكر (Male)</option>
-                                    <option value="Female">أنثى (Female)</option>
+                                    <option value="Male">ذكر (MALE)</option>
+                                    <option value="Female">أنثى (FEMALE)</option>
                                 </select>
                             </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">العمر (سنوات)</label>
+                            <div className="space-y-2">
+                                <label className="block text-sm font-black text-gray-700 dark:text-gray-300">العمر (AGE)</label>
                                 <input
                                     type="number"
                                     name="age"
                                     value={formData.age}
                                     onChange={handleChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 p-5 rounded-[2rem] outline-none border-2 border-transparent focus:border-emerald-500 transition-all font-bold dark:text-white"
                                     placeholder="مثال: 5"
                                 />
                             </div>
                         </div>
 
-                        {/* General Info placeholder */}
-
-                        {/* Media Uploads - Images & Video */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">صورة الخيل (رئيسية)</label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-2">
+                                <label className="block text-sm font-black text-gray-700 dark:text-gray-300">صورة الخيل (MAIN IMAGE)</label>
                                 <input
                                     type="file"
                                     name="imageFile"
                                     accept="image/*"
                                     onChange={handleFileChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 p-5 rounded-[2rem] outline-none dark:text-white font-bold"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">فيديو الخيل (اختياري)</label>
+                            <div className="space-y-2">
+                                <label className="block text-sm font-black text-gray-700 dark:text-gray-300">فيديو (OPTIONAL VIDEO)</label>
                                 <input
                                     type="file"
                                     name="videoFile"
                                     accept="video/*"
                                     onChange={handleFileChange}
-                                    className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                                    className="w-full bg-gray-50 dark:bg-gray-800 p-5 rounded-[2rem] outline-none dark:text-white font-bold"
                                 />
                             </div>
                         </div>
 
-                        {/* Health */}
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">الحالة الصحية</label>
+                        <div className="space-y-2">
+                            <label className="block text-sm font-black text-gray-700 dark:text-gray-300">الحالة الصحية (HEALTH)</label>
                             <input
                                 type="text"
                                 name="healthStatus"
                                 value={formData.healthStatus}
                                 onChange={handleChange}
-                                className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition"
+                                className="w-full bg-gray-50 dark:bg-gray-800 p-5 rounded-[2rem] outline-none border-2 border-transparent focus:border-emerald-500 transition-all font-bold dark:text-white"
                                 placeholder="مثال: سليمة، إصابة سابقة..."
                             />
                         </div>
 
-                        {/* Vaccine Checkbox */}
-                        <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
+                        <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 md:p-8 p-6 rounded-[2.5rem] border-2 border-transparent hover:border-emerald-500 transition-all">
                             <input
                                 type="checkbox"
                                 name="vaccinated"
                                 checked={formData.vaccinated}
                                 onChange={handleChange}
                                 id="vaccinated"
-                                className="w-5 h-5 accent-green-500 rounded focus:ring-green-500"
+                                className="w-6 h-6 accent-emerald-600 rounded-lg cursor-pointer"
                             />
-                            <label htmlFor="vaccinated" className="text-sm font-bold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-                                هل تم أخذ التطعيمات مؤخراً؟
+                            <label htmlFor="vaccinated" className="text-base font-black text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                                هل تم أخذ التطعيمات مؤخراً؟ (VACCINATED)
                             </label>
                         </div>
 
-                        {/* Racing History */}
-                        <div className="space-y-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-xl">
-                            <div className="flex items-center gap-3">
+                        <div className="space-y-6 bg-gray-50 dark:bg-gray-800 md:p-8 p-6 rounded-[2.5rem] border-2 border-transparent hover:border-emerald-500 transition-all">
+                            <div className="flex items-center gap-4">
                                 <input
                                     type="checkbox"
                                     name="hasRacingHistory"
                                     checked={formData.hasRacingHistory}
                                     onChange={handleChange}
                                     id="hasRacingHistory"
-                                    className="w-5 h-5 accent-green-500 rounded focus:ring-green-500"
+                                    className="w-6 h-6 accent-emerald-600 rounded-lg cursor-pointer"
                                 />
-                                <label htmlFor="hasRacingHistory" className="text-sm font-bold text-gray-700 dark:text-gray-300 cursor-pointer select-none">
-                                    هل شارك في سباقات وفاز؟
+                                <label htmlFor="hasRacingHistory" className="text-base font-black text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                                    هل شارك في سباقات سابقة؟ (RACING HISTORY)
                                 </label>
                             </div>
 
@@ -261,7 +237,7 @@ const AddHorse = () => {
                                     name="racingHistoryDetails"
                                     value={formData.racingHistoryDetails}
                                     onChange={handleChange}
-                                    className="w-full bg-white dark:bg-gray-900 p-4 rounded-xl outline-none border border-transparent focus:border-green-500 transition h-24"
+                                    className="w-full bg-white dark:bg-gray-900 p-5 rounded-2xl outline-none border-2 border-emerald-100 dark:border-gray-700 focus:border-emerald-500 transition-all h-32 font-bold dark:text-white"
                                     placeholder="اذكر التفاصيل (اسم السباق، المركز...)"
                                 ></textarea>
                             )}
@@ -270,9 +246,9 @@ const AddHorse = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-[#76E05B] text-white font-black py-4 rounded-2xl text-lg hover:bg-green-600 transition shadow-xl shadow-green-100 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-emerald-800 text-white font-black py-6 rounded-[2.5rem] text-xl hover:bg-emerald-900 transition shadow-2xl shadow-emerald-900/40 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
                         >
-                            {loading ? 'جاري الإرسال...' : 'إضافة للطلبات النظام'}
+                            {loading ? 'جاري الإرسال...' : 'تأكيد التسجيل في النظام'}
                         </button>
                     </form>
                 </div>

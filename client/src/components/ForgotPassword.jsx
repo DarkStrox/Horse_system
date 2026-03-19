@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { userApi } from '../api/api';
 import Navbar from './Navbar';
 
 const ForgotPassword = () => {
@@ -17,7 +17,7 @@ const ForgotPassword = () => {
         setSuccess(false);
 
         try {
-            const res = await axios.post('/api/Account/forgot-password', { email });
+            const res = await userApi.forgotPassword(email);
             setSuccess(true);
             if (res.data.token) {
                 sessionStorage.setItem('resetToken', res.data.token);

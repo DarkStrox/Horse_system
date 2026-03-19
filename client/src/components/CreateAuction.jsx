@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
-
-const API_BASE_URL = 'http://localhost:5000';
+import { horseApi, auctionApi } from '../api/api';
 
 const CreateAuction = () => {
     const navigate = useNavigate();
@@ -24,20 +22,18 @@ const CreateAuction = () => {
         const token = localStorage.getItem('token');
         if (!token) return navigate('/login');
 
-        // Fetch user's horses
-        axios.get(`${API_BASE_URL}/api/horse/my-horses`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(res => setHorses(res.data))
-            .catch(err => {
-                console.error("Error fetching horses:", err);
-                alert("Error: " + (err.response?.status || err.message));
-                setHorses([]);
-            });
+        fetchMyHorses();
+    }, [navigate]);
 
-        // Also if admin, fetch all horses? For now assume Seller creates for their own.
-        // If Admin, maybe fetch all. But let's stick to "My Horses" endpoint for simplicity or assume User is Owner.
-    }, []);
+    const fetchMyHorses = async () => {
+        try {
+            const res = await horseApi.getMyHorses();
+            setHorses(res.data);
+        } catch (err) {
+            console.error("Error fetching horses:", err);
+            setHorses([]);
+        }
+    };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -48,13 +44,10 @@ const CreateAuction = () => {
         if (e.target.name === 'video') setVideoFile(e.target.files[0]);
     };
 
-
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
             const data = new FormData();
             data.append('name', formData.name);
             data.append('microchipId', formData.microchipId);
@@ -64,12 +57,7 @@ const CreateAuction = () => {
             if (imageFile) data.append('imageFile', imageFile);
             if (videoFile) data.append('videoFile', videoFile);
 
-            await axios.post(`${API_BASE_URL}/api/auction/create`, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            await auctionApi.createAuction(data);
             alert("تم إنشاء المزاد بنجاح!");
             navigate('/auctions');
         } catch (err) {
@@ -85,55 +73,54 @@ const CreateAuction = () => {
             <Navbar />
             <main className="container mx-auto px-4 md:px-16 py-12">
                 <div className="max-w-2xl mx-auto bg-white dark:bg-gray-900 p-10 rounded-[2.5rem] shadow-xl border border-gray-100 dark:border-gray-800">
-                    <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-8">إنشاء مزاد جديد</h1>
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-8 underline decoration-emerald-500 decoration-4 underline-offset-8">إنشاء مزاد جديد</h1>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label className="block font-bold mb-2 dark:text-white">عنوان المزاد</label>
-                            <input type="text" name="name" onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none" placeholder="مثال: مزاد الفرس الأصيلة..." required />
+                            <input type="text" name="name" onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-emerald-500 transition-all text-gray-900 dark:text-white" placeholder="مثال: مزاد الفرس الأصيلة..." required />
                         </div>
 
                         <div>
                             <label className="block font-bold mb-2 dark:text-white">اختر الخيل</label>
-                            <select name="microchipId" onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none" required>
+                            <select name="microchipId" onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-emerald-500 transition-all text-gray-900 dark:text-white" required>
                                 <option value="">-- اختر من خيولك --</option>
                                 {horses.map(h => (
-                                    <option key={h.microchipId} value={h.microchipId}>{h.name} - {h.breed}</option>
+                                    <option key={h.Id || h.id} value={h.Id || h.id}>{h.name || h.Name} - {h.breed || h.Breed}</option>
                                 ))}
                             </select>
                         </div>
 
-                        <div>
-                            <label className="block font-bold mb-2 dark:text-white">صورة المزاد (اختياري)</label>
-                            <input type="file" name="image" onChange={handleFileChange} accept="image/*" className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none" />
-                            <p className="text-xs text-gray-400 mt-1">اتركها فارغة لاستخدام صورة الخيل الأصلية</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block font-bold mb-2 dark:text-white">صورة المزاد (اختياري)</label>
+                                <input type="file" name="image" onChange={handleFileChange} accept="image/*" className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-emerald-500 transition-all text-gray-900 dark:text-white" />
+                                <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-widest">اتركها فارغة لاستخدام صورة الخيل الأصلية</p>
+                            </div>
+                            <div>
+                                <label className="block font-bold mb-2 dark:text-white">رفع فيديو (اختياري)</label>
+                                <input type="file" name="video" onChange={handleFileChange} accept="video/*" className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-emerald-500 transition-all text-gray-900 dark:text-white" />
+                            </div>
                         </div>
-
-
 
                         <div>
                             <label className="block font-bold mb-2 dark:text-white">السعر الافتتاحي (ج.م)</label>
-                            <input type="number" name="basePrice" onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none" required />
+                            <input type="number" name="basePrice" onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-emerald-500 transition-all text-gray-900 dark:text-white" required />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block font-bold mb-2 dark:text-white">وقت البدء</label>
-                                <input type="datetime-local" name="startTime" onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none" required />
+                                <input type="datetime-local" name="startTime" onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-emerald-500 transition-all text-gray-900 dark:text-white" required />
                             </div>
                             <div>
                                 <label className="block font-bold mb-2 dark:text-white">وقت الانتهاء</label>
-                                <input type="datetime-local" name="endTime" onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none" required />
+                                <input type="datetime-local" name="endTime" onChange={handleChange} className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none border border-transparent focus:border-emerald-500 transition-all text-gray-900 dark:text-white" required />
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block font-bold mb-2 dark:text-white">رفع فيديو (اختياري)</label>
-                            <input type="file" name="video" onChange={handleFileChange} accept="video/*" className="w-full bg-gray-50 dark:bg-gray-800 p-4 rounded-xl outline-none" />
-                        </div>
-
-                        <button type="submit" disabled={loading} className="w-full bg-green-500 text-white font-black py-4 rounded-xl shadow-lg hover:bg-green-600 transition">
-                            {loading ? 'جاري الإنشاء...' : 'إنشاء المزاد'}
+                        <button type="submit" disabled={loading} className="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-black py-5 rounded-[2rem] shadow-xl shadow-emerald-900/20 transition-all hover:-translate-y-1 mt-8 text-xl">
+                            {loading ? 'جاري الإنشاء...' : 'إنشاء المزاد الآن'}
                         </button>
                     </form>
                 </div>
