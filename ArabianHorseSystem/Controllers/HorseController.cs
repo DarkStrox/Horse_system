@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using System.Linq;
 using ArabianHorseSystem.Data;
 using ArabianHorseSystem.Models;
 using ArabianHorseSystem.DTOs;
@@ -44,6 +48,34 @@ namespace ArabianHorseSystem.Controllers
                     // Use Owner's User FullName if available
                     OwnerName = h.Owner != null && h.Owner.User != null ? h.Owner.User.FullName : "Unknown",
                     h.Pedigree
+                })
+                .ToListAsync();
+
+            return Ok(horses);
+        }
+
+        // GET: api/horse/stud/{studId}
+        [HttpGet("stud/{studId}")]
+        public async Task<IActionResult> GetHorsesByStud(int studId)
+        {
+            var horses = await _context.HorseProfiles
+                .Include(h => h.Owner).ThenInclude(o => o.User)
+                .Include(h => h.Stud)
+                .Include(h => h.Pedigree)
+                .Include(h => h.Colour)
+                .Where(h => h.StudId == studId)
+                .Select(h => new 
+                {
+                    Id = h.MicrochipId,
+                    h.Name,
+                    h.Breed,
+                    Type = h.Gender, // Mapping Gender to Type as used in StudDetails
+                    Color = h.Colour != null ? h.Colour.Name : "Unknown",
+                    Birth = h.Age.HasValue ? h.Age.Value.ToString() : "Unknown",
+                    Img = h.ImageUrl ?? "/horses/profile_main.png",
+                    Owner = h.Owner != null && h.Owner.User != null ? h.Owner.User.FullName : "Unknown",
+                    Branch = "Main", // Placeholder
+                    h.MicrochipId
                 })
                 .ToListAsync();
 
@@ -111,6 +143,79 @@ namespace ArabianHorseSystem.Controllers
                 return BadRequest(new { message = "Horse with this Microchip ID already exists." });
             }
 
+            // Handle Pedigree Image Upload
+            string? pedigreeImageUrl = null;
+            if (model.PedigreeImageFile != null && model.PedigreeImageFile.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "pedigrees");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.PedigreeImageFile.FileName;
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.PedigreeImageFile.CopyToAsync(stream);
+                }
+                pedigreeImageUrl = "/uploads/pedigrees/" + uniqueFileName;
+            }
+
+            // Handle Health Report PDF (using HealthReportFile from model if present)
+            string? healthReportUrl = null;
+            if (model.HealthReportFile != null && model.HealthReportFile.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "health");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.HealthReportFile.FileName;
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.HealthReportFile.CopyToAsync(stream);
+                }
+                healthReportUrl = "/uploads/health/" + uniqueFileName;
+            }
+
+            // Handle Color mapping
+            int? colourId = null;
+            if (!string.IsNullOrEmpty(model.ColorName))
+            {
+                var colour = await _context.Colours.FirstOrDefaultAsync(c => c.Name == model.ColorName);
+                if (colour == null)
+                {
+                    colour = new Colour { Name = model.ColorName };
+                    _context.Colours.Add(colour);
+                    await _context.SaveChangesAsync();
+                }
+                colourId = colour.ColourId;
+            }
+
+            // Handle Stud mapping
+            int? studId = model.StudId;
+            if (!studId.HasValue && !string.IsNullOrEmpty(model.StudName))
+            {
+                // Try to find stud by name (checking both Arabic and English fields)
+                var stud = await _context.Studs.FirstOrDefaultAsync(s => s.NameArabic == model.StudName || s.NameEnglish == model.StudName);
+                if (stud != null)
+                {
+                    studId = stud.StudId;
+                }
+            }
+
+            // Handle Pedigree Record
+            Pedigree? pedigree = null;
+            if (!string.IsNullOrEmpty(model.Sire) || !string.IsNullOrEmpty(model.Dam))
+            {
+                pedigree = new Pedigree
+                {
+                    FatherHorseName = model.Sire,
+                    MotherHorseName = model.Dam
+                };
+                _context.Pedigrees.Add(pedigree);
+                await _context.SaveChangesAsync();
+            }
+
             var owner = await _context.Owners.FirstOrDefaultAsync(o => o.OwnerId == user.Id);
             if (owner == null)
             {
@@ -126,20 +231,41 @@ namespace ArabianHorseSystem.Controllers
                 Age = model.Age,
                 Gender = model.Gender,
                 Breed = model.Breed,
-                IsForSale = false, // Just registering to system
-                IsApproved = true,  // System registration is auto-approved
+                IsForSale = false, 
+                IsApproved = true,  
                 HealthStatus = model.HealthStatus,
                 Vaccinated = model.Vaccinated,
                 RacingHistory = model.HasRacingHistory ? model.RacingHistoryDetails : "None",
                 ImageUrl = imageUrl,
                 VideoUrl = videoUrl,
-                OwnerId = owner.OwnerId
+                PedigreeImageUrl = pedigreeImageUrl,
+                HealthReportUrl = healthReportUrl,
+                OwnerId = owner.OwnerId,
+                StudId = studId,
+                Breeder = model.Breeder,
+                ColourId = colourId,
+                PedId = pedigree?.PedId
             };
 
             _context.HorseProfiles.Add(horse);
+
+            // Add an initial health record if diagnosis/treatment provided
+            if (!string.IsNullOrEmpty(model.Diagnosis) || !string.IsNullOrEmpty(model.Treatment))
+            {
+                var healthRecord = new HealthRecord
+                {
+                    MicrochipId = horse.MicrochipId,
+                    Diagnosis = model.Diagnosis ?? "General Checkup",
+                    Treatment = model.Treatment ?? "None",
+                    Notes = model.Notes,
+                    VisitDate = DateTime.UtcNow
+                };
+                _context.HealthRecords.Add(healthRecord);
+            }
+
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Horse registered in system successfully.", horseId = horse.MicrochipId });
+            return Ok(new { message = "Horse registered in system successfully.", horseId = horse.MicrochipId, imageUrl = horse.ImageUrl });
         }
 
         // PUT: api/horse/list-for-sale
@@ -255,6 +381,34 @@ namespace ArabianHorseSystem.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            // Handle Health Report PDF
+            string? healthReportUrl = null;
+
+            if (model.HealthReportFile != null)
+            {
+                if (model.HealthReportFile.ContentType != "application/pdf")
+                    return BadRequest("Only PDF files are allowed.");
+
+                if (model.HealthReportFile.Length > 5 * 1024 * 1024)
+                    return BadRequest("File size must be less than 5MB.");
+
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "health");
+
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                var uniqueFileName = Guid.NewGuid().ToString() + ".pdf";
+
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await model.HealthReportFile.CopyToAsync(stream);
+                }
+
+                healthReportUrl = "/uploads/health/" + uniqueFileName;
+            }
+
             var horse = new HorseProfile
             {
                 MicrochipId = model.MicrochipId,
@@ -265,7 +419,7 @@ namespace ArabianHorseSystem.Controllers
                 Price = model.Price,
                 IsForSale = true,
                 IsApproved = isAdmin, // Auto-approve if Admin
-                HealthStatus = model.HealthStatus,
+                HealthReportUrl = healthReportUrl,
                 Vaccinated = model.Vaccinated,
                 RacingHistory = model.HasRacingHistory ? model.RacingHistoryDetails : "None",
                 ClaimLocation = model.ClaimLocation,
@@ -275,6 +429,17 @@ namespace ArabianHorseSystem.Controllers
             };
 
             _context.HorseProfiles.Add(horse);
+
+            var healthRecord = new HealthRecord
+            {
+                MicrochipId = horse.MicrochipId,
+                Diagnosis = model.Diagnosis,
+                Treatment = model.Treatment,
+                Notes = model.Notes,
+                VisitDate = DateTime.UtcNow
+            };
+
+            _context.HealthRecords.Add(healthRecord);
             await _context.SaveChangesAsync();
 
             if (!isAdmin)
@@ -303,12 +468,41 @@ namespace ArabianHorseSystem.Controllers
             return NoContent();
         }
         
+        // GET: api/horse
+        [HttpGet]
+        public async Task<IActionResult> GetAllHorses()
+        {
+            var horses = await _context.HorseProfiles
+                .Include(h => h.Owner).ThenInclude(o => o.User)
+                .Include(h => h.Stud)
+                .Include(h => h.Pedigree)
+                .Where(h => h.IsApproved)
+                .Select(h => new 
+                {
+                    Id = h.MicrochipId,
+                    h.Name,
+                    h.Breed,
+                    h.Gender,
+                    h.Age,
+                    h.Breeder,
+                    Owner = h.Owner != null && h.Owner.User != null ? h.Owner.User.FullName : "Unknown",
+                    StudName = h.Stud != null ? h.Stud.NameArabic : "None",
+                    StudBranch = "Main",
+                    Sire = h.Pedigree != null ? h.Pedigree.FatherHorseName : "Unknown",
+                    Dam = h.Pedigree != null ? h.Pedigree.MotherHorseName : "Unknown",
+                    h.ImageUrl,
+                    h.IsApproved,
+                    IsActive = h.IsApproved
+                })
+                .ToListAsync();
+
+            return Ok(horses);
+        }
+
         // GET: api/horse/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetHorse(string id)
         {
-             // Try int ID or string MicrochipId logic if needed, for now assume primary key is string MicrochipId? 
-             // Wait, HorseProfile Key is MicrochipId (string).
              var horse = await _context.HorseProfiles
                 .Include(h => h.Owner).ThenInclude(o => o.User)
                 .Include(h => h.Pedigree)
@@ -337,12 +531,25 @@ namespace ArabianHorseSystem.Controllers
             }
 
             var horses = await query
+                .Include(h => h.Owner).ThenInclude(o => o.User)
+                .Include(h => h.Stud)
+                .Include(h => h.Pedigree)
                 .Select(h => new 
                 {
-                    h.MicrochipId,
+                    Id = h.MicrochipId,
                     h.Name,
                     h.Breed,
-                    h.ImageUrl
+                    h.Gender,
+                    h.Age,
+                    h.Breeder,
+                    Owner = h.Owner != null && h.Owner.User != null ? h.Owner.User.FullName : "Unknown",
+                    StudName = h.Stud != null ? h.Stud.NameArabic : "None",
+                    StudBranch = "Main", // Stud model has no Branch field yet
+                    Sire = h.Pedigree != null ? h.Pedigree.FatherHorseName : "Unknown",
+                    Dam = h.Pedigree != null ? h.Pedigree.MotherHorseName : "Unknown",
+                    h.ImageUrl,
+                    h.IsApproved,
+                    IsActive = h.IsApproved
                 })
                 .ToListAsync();
 

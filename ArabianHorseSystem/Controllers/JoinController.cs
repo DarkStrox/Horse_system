@@ -14,15 +14,195 @@ namespace ArabianHorseSystem.Controllers
     public class JoinController : ControllerBase
     {
         private readonly NotificationService _notificationService;
-        private readonly UserManager<ArabianHorseSystem.Models.User> _userManager;
+        private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
 
-        public JoinController(NotificationService notificationService, UserManager<ArabianHorseSystem.Models.User> userManager, ApplicationDbContext context)
+        public JoinController(
+            NotificationService notificationService,
+            UserManager<User> userManager,
+            ApplicationDbContext context)
         {
             _notificationService = notificationService;
             _userManager = userManager;
             _context = context;
         }
+
+        // =====================================================
+        // DIRECT REGISTRATION
+        // =====================================================
+
+        [HttpPost("vet")]
+        public async Task<IActionResult> RegisterVet([FromForm] VetJoinRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var licensePath = await SavePdf(request.LicensePdf);
+            var idCardPath = await SavePdf(request.IdCardPdf);
+            var certificatesPath = await SavePdf(request.CertificatesPdf);
+
+            var user = new User
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                FullName = request.FullName,
+                PhoneNumber = request.PhoneNumber,
+                Role = "EquineVet"
+            };
+
+            var result = await _userManager.CreateAsync(user, request.Password);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            var vet = new EquineVet
+            {
+                VetId = user.Id,
+                Ssn = request.NationalId,
+                VeterinaryLicense = request.LicenseNumber,
+
+                 LicenseFileUrl = licensePath,
+                NationalIdFileUrl = idCardPath,
+                CertificatesFileUrl = certificatesPath
+            };
+
+            _context.EquineVets.Add(vet);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Vet registered successfully", licensePath, idCardPath, certificatesPath });
+        }
+        [HttpGet("vet-documents/{vetId}")]
+        [Authorize]
+        public async Task<IActionResult> GetVetDocuments(int vetId)
+        {
+            var admin = await _userManager.GetUserAsync(HttpContext.User);
+
+            if (admin == null || admin.Role != "Admin")
+                return Unauthorized();
+
+            var vet = await _context.EquineVets
+                .Include(v => v.User)
+                .FirstOrDefaultAsync(v => v.VetId == vetId);
+
+            if (vet == null)
+                return NotFound();
+
+            return Ok(new
+            {
+                vet.User.FullName,
+                vet.User.Email,
+                LicensePdf = vet.LicenseFileUrl,
+                IdCardPdf = vet.NationalIdFileUrl,
+                CertificatesPdf = vet.CertificatesFileUrl
+            });
+        }
+
+        [HttpPost("buyer")]
+        public async Task<IActionResult> RegisterBuyer([FromBody] BuyerJoinRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var user = new User
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                FullName = request.FullName,
+                PhoneNumber = request.PhoneNumber,
+                Role = "Buyer"
+            };
+
+            var result = await _userManager.CreateAsync(user, request.Password);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            return Ok(new { message = "Buyer registered successfully" });
+        }
+        [HttpGet("buyer/{id}")]
+        [Authorize]
+        public async Task<IActionResult> GetBuyer(int id)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+
+            if (user == null || user.Role != "Buyer")
+                return NotFound();
+
+            return Ok(new
+            {
+                user.FullName,
+                user.Email,
+                user.PhoneNumber
+            });
+        }
+
+        [HttpPost("seller")]
+        public async Task<IActionResult> RegisterSeller([FromForm] SellerJoinRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var idCardPath = await SavePdf(request.IdCardPdf);
+            var recommendationPath = await SavePdf(request.RecommendationLetterPdf);
+
+            var user = new User
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                FullName = request.FullName,
+                PhoneNumber = request.PhoneNumber,
+                Role = "Owner"
+            };
+
+            var result = await _userManager.CreateAsync(user, request.Password);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            var owner = new Owner
+            {
+                OwnerId = user.Id,
+                Since = DateTime.UtcNow,
+                NationalIdFileUrl = idCardPath,
+                RecommendationLetterUrl = recommendationPath
+            };
+
+            _context.Owners.Add(owner);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Seller registered successfully", idCardPath, recommendationPath });
+        }
+
+        [HttpGet("seller-documents/{ownerId}")]
+        [Authorize]
+        public async Task<IActionResult> GetSellerDocuments(int ownerId)
+        {
+            var admin = await _userManager.GetUserAsync(HttpContext.User);
+
+            if (admin == null || admin.Role != "Admin")
+                return Unauthorized();
+
+            var owner = await _context.Owners
+                .Include(o => o.User)
+                .FirstOrDefaultAsync(o => o.OwnerId == ownerId);
+
+            if (owner == null)
+                return NotFound();
+
+            return Ok(new
+            {
+                owner.User.FullName,
+                owner.User.Email,
+                IdCard = owner.NationalIdFileUrl,
+                RecommendationLetter = owner.RecommendationLetterUrl
+            });
+        }
+
+
+
+        // =====================================================
+        // APPLICATION SYSTEM (ADMIN APPROVAL)
+        // =====================================================
 
         [HttpPost("apply")]
         public async Task<IActionResult> Apply([FromBody] JoinRequest request)
@@ -31,17 +211,14 @@ namespace ArabianHorseSystem.Controllers
                 return BadRequest(ModelState);
 
             await _notificationService.AddNotificationAsync(request);
+
             return Ok(new { message = "Application submitted successfully" });
         }
 
         [HttpGet("notifications")]
-        [Authorize] // Should strictly be Admin only, but checking role inside to be safe or use Policy
+        [Authorize]
         public async Task<IActionResult> GetNotifications()
         {
-            // var user = await _userManager.GetUserAsync(User);
-            // if (user == null || user.Role != "Admin")
-            //    return Unauthorized("Only Admins can view applications.");
-
             var notifications = await _notificationService.GetAllNotificationsAsync();
             return Ok(notifications);
         }
@@ -51,91 +228,91 @@ namespace ArabianHorseSystem.Controllers
         public async Task<IActionResult> Approve(string id)
         {
             var admin = await _userManager.GetUserAsync(HttpContext.User);
+
             if (admin == null || admin.Role != "Admin")
                 return Unauthorized();
 
             var notification = await _notificationService.GetNotificationAsync(id);
+
             if (notification == null)
                 return NotFound("Application not found.");
 
             var req = notification.Request;
+
             var existingUser = await _userManager.FindByEmailAsync(req.Email!);
 
-            // Logic:
-            // 1. If user doesn't exist, we can't really 'upgrade' them easily without password. 
-            //    Assumption: User MUST be registered first to apply? Or we create a placeholder?
-            //    The prompt says: "enter your information inclucing name email phone number... after he approve him his name , email and phone and his ID Card goes to the postgredatabase"
-            //    This implies we might need to CREATE the user if they don't exist, OR update if they do.
-            //    Generating a random password if creating new user.
-
             bool isNewUser = false;
+
             if (existingUser == null)
             {
                 isNewUser = true;
-                existingUser = new ArabianHorseSystem.Models.User
+
+                existingUser = new User
                 {
                     UserName = req.Email,
                     Email = req.Email,
                     FullName = req.FullName,
                     PhoneNumber = req.PhoneNumber,
-                    Role = req.Role, // Set role immediately
-                    EmailConfirmed = true 
+                    Role = req.Role,
+                    EmailConfirmed = true
                 };
-                var result = await _userManager.CreateAsync(existingUser, "Password123!"); // Temporary default password
+
+                var result = await _userManager.CreateAsync(existingUser, "Password123!");
+
                 if (!result.Succeeded)
                     return BadRequest(result.Errors);
-                
+
                 await _userManager.AddToRoleAsync(existingUser, req.Role!);
             }
             else
             {
-                // Update existing user role
                 existingUser.Role = req.Role;
                 await _userManager.UpdateAsync(existingUser);
-                
-                // Ensure Identity role is also added
+
                 if (!await _userManager.IsInRoleAsync(existingUser, req.Role!))
                 {
                     await _userManager.AddToRoleAsync(existingUser, req.Role!);
                 }
             }
 
-            // 2. Add to specific role tables
             try
             {
                 if (req.Role == "EquineVet")
                 {
-                    var vet = new EquineVet
-                    {
-                        VetId = existingUser.Id,
-                        Ssn = req.NationalId ?? "N/A",
-                        VeterinaryLicense = req.LicenseNumber ?? "N/A"
-                    };
                     if (!_context.EquineVets.Any(v => v.VetId == existingUser.Id))
                     {
+                        var vet = new EquineVet
+                        {
+                            VetId = existingUser.Id,
+                            Ssn = req.NationalId ?? "N/A",
+                            VeterinaryLicense = req.LicenseNumber ?? "N/A",
+                            ExperienceYears = req.ExperienceYears,
+                            Specialization = req.Specialization,
+                            PreviousWorkplace = req.PreviousWorkplace,
+                            HorseExperience = req.HorseExperience
+                        };
+
                         _context.EquineVets.Add(vet);
                     }
                 }
+
                 else if (req.Role == "Trainer")
                 {
-                    var trainer = new Trainer
-                    {
-                        TrainerId = existingUser.Id,
-                        ExperienceYears = req.ExperienceYears ?? 0,
-                        Bio = req.Motivation
-                    };
                     if (!_context.Trainers.Any(t => t.TrainerId == existingUser.Id))
                     {
+                        var trainer = new Trainer
+                        {
+                            TrainerId = existingUser.Id,
+                            ExperienceYears = req.ExperienceYears ?? 0,
+                            Bio = req.Motivation
+                        };
+
                         _context.Trainers.Add(trainer);
                     }
                 }
-                else if (req.Role == "Seller") // Maps to Owner with intent to sell
+
+                else if (req.Role == "Seller")
                 {
-                    // Update Role to Seller in DB? Or User.Role = "Seller"?
-                    // User.cs role comment says 'Owner', 'Trainer', 'EquineVet', 'Buyer'.
-                    // Let's assume 'Seller' is a valid role string we can use.
-                    
-                    // Create Owner profile if not exists
                     if (!_context.Owners.Any(o => o.OwnerId == existingUser.Id))
                     {
                         var owner = new Owner
@@ -143,20 +320,24 @@ namespace ArabianHorseSystem.Controllers
                             OwnerId = existingUser.Id,
                             Since = DateTime.UtcNow
                         };
+
                         _context.Owners.Add(owner);
                     }
                 }
 
                 await _context.SaveChangesAsync();
-                
-                // 3. Delete notification
+
                 await _notificationService.DeleteNotificationAsync(id);
 
-                return Ok(new { message = "User approved and role updated.", tempPassword = isNewUser ? "Password123!" : null });
+                return Ok(new
+                {
+                    message = "User approved successfully",
+                    tempPassword = isNewUser ? "Password123!" : null
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error updating database: {ex.Message}");
+                return StatusCode(500, ex.Message);
             }
         }
 
@@ -165,29 +346,25 @@ namespace ArabianHorseSystem.Controllers
         public async Task<IActionResult> ApproveHorse(string id)
         {
             var admin = await _userManager.GetUserAsync(HttpContext.User);
+
             if (admin == null || admin.Role != "Admin")
                 return Unauthorized();
 
             var notification = await _notificationService.GetNotificationAsync(id);
+
             if (notification == null || notification.HorseRequest == null)
-                return NotFound("Horse application not found.");
+                return NotFound("Horse request not found");
 
             var req = notification.HorseRequest;
-            
-            // Find Owner (Sender)
-            var senderId = notification.SenderId;
-            if (string.IsNullOrEmpty(senderId)) return BadRequest("Invalid sender ID.");
-            
-            if (!int.TryParse(senderId, out int ownerId)) return BadRequest("Invalid owner ID format.");
 
-            var owner = await _context.Owners.FirstOrDefaultAsync(o => o.OwnerId == ownerId);
+            var senderId = notification.SenderId;
+
+            var owner = await _context.Owners
+                .FirstOrDefaultAsync(o => o.OwnerId == int.Parse(senderId));
 
             if (owner == null)
-            {
-                return BadRequest("Owner profile not found for the sender.");
-            }
+                return BadRequest("Owner not found");
 
-            // Create Horse Profile
             var horse = new HorseProfile
             {
                 MicrochipId = req.MicrochipId,
@@ -198,18 +375,19 @@ namespace ArabianHorseSystem.Controllers
                 Vaccinated = req.Vaccinated,
                 RacingHistory = req.HasRacingHistory ? req.RacingHistoryDetails : "None",
                 ClaimLocation = req.ClaimLocation,
-                ImageUrl = req.ImageUrl ?? "/auctions/hero.png", // Default image if none
+                ImageUrl = req.ImageUrl ?? "/auctions/hero.png",
                 IsForSale = true,
                 IsApproved = true,
                 OwnerId = owner.OwnerId
             };
 
             _context.HorseProfiles.Add(horse);
+
             await _context.SaveChangesAsync();
 
             await _notificationService.DeleteNotificationAsync(id);
 
-            return Ok(new { message = "Horse approved and listed for sale." });
+            return Ok(new { message = "Horse approved and listed successfully" });
         }
 
         [HttpPost("deny/{id}")]
@@ -217,11 +395,39 @@ namespace ArabianHorseSystem.Controllers
         public async Task<IActionResult> Deny(string id)
         {
             var admin = await _userManager.GetUserAsync(HttpContext.User);
+
             if (admin == null || admin.Role != "Admin")
                 return Unauthorized();
 
             await _notificationService.DeleteNotificationAsync(id);
-            return Ok(new { message = "Application denied." });
+
+            return Ok(new { message = "Application denied" });
+        }
+
+        // =====================================================
+        // FILE UPLOAD
+        // =====================================================
+
+        private async Task<string> SavePdf(IFormFile file)
+        {
+            if (file == null)
+                return "";
+
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/pdfs");
+
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            var fileName = Guid.NewGuid().ToString() + ".pdf";
+
+            var path = Path.Combine(folder, fileName);
+
+            using (var stream = new FileStream(path, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            return "/pdfs/" + fileName;
         }
     }
 }

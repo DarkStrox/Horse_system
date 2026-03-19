@@ -21,13 +21,27 @@ namespace ArabianHorseSystem.Controllers
         private readonly ApplicationDbContext _context;
         private readonly NewsService _newsService;
         private readonly HttpClient _httpClient;
+        private readonly ILogger<NewsController> _logger;
         private const string NewsApiKey = "17d1482fe9844123ac9e27eef48baf6c"; 
 
-        public NewsController(ApplicationDbContext context, NewsService newsService, HttpClient httpClient)
+        [HttpGet("cleanup-tests")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CleanupTests()
+        {
+            var testNews = await _context.NewsPosts
+                .Where(n => n.Url.Contains("example.com") || n.Url.Contains("internal-") || n.Title.Contains("Quantum"))
+                .ToListAsync();
+            _context.NewsPosts.RemoveRange(testNews);
+            int count = await _context.SaveChangesAsync();
+            return Ok(new { message = $"Deleted {count} test articles." });
+        }
+
+        public NewsController(ApplicationDbContext context, NewsService newsService, HttpClient httpClient, ILogger<NewsController> logger)
         {
             _context = context;
             _newsService = newsService;
             _httpClient = httpClient;
+            _logger = logger;
         }
 
         // GET: api/News
@@ -80,27 +94,86 @@ namespace ArabianHorseSystem.Controllers
                 {
                     return BadRequest("Search query is required.");
                 }
-
-                if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
-                {
-                    _httpClient.DefaultRequestHeaders.Add("User-Agent", "ArabianHorseSystem-Web");
-                }
+                string url = $"https://newsapi.org/v2/everything?q={Uri.EscapeDataString(search.Query)}&sortBy=relevancy&language=en&apiKey={NewsApiKey}";
                 
-                string url = $"https://newsapi.org/v2/everything?q={Uri.EscapeDataString(search.Query)}&apiKey={NewsApiKey}&sortBy=relevancy&language=en";
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("User-Agent", "ArabianHorseSystem/1.0");
+                request.Headers.Add("Accept", "application/json");
                 
-                var apiResponse = await _httpClient.GetAsync(url);
+                var apiResponse = await _httpClient.SendAsync(request);
                 if (!apiResponse.IsSuccessStatusCode)
                 {
                     var errorContent = await apiResponse.Content.ReadAsStringAsync();
+                    _logger.LogError("Search NewsAPI Error - Status: {Status}, Body: {Body}", apiResponse.StatusCode, errorContent);
                     return StatusCode((int)apiResponse.StatusCode, new { error = "NewsAPI Error", details = errorContent });
                 }
-
                 var content = await apiResponse.Content.ReadFromJsonAsync<object>();
                 return content;
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = ex.Message, details = ex.ToString() });
+            }
+        }
+
+        [HttpPost("scrape")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ScrapeNews()
+        {
+            try
+            {
+                _logger.LogInformation("Manual news scrape triggered by {User}", User.Identity?.Name);
+                
+                string today = DateTime.Now.ToString("yyyy-MM-dd");
+                string fromDate = DateTime.Now.AddDays(-27).ToString("yyyy-MM-dd");
+                string query = Uri.EscapeDataString("\"Arabian horse\" OR \"Purebred Arabian\"");
+                string url = $"https://newsapi.org/v2/everything?q={query}&from={fromDate}&to={today}&sortBy=publishedAt&language=en&apiKey={NewsApiKey}";
+
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("User-Agent", "ArabianHorseSystem/1.0");
+                request.Headers.Add("Accept", "application/json");
+
+                _logger.LogInformation("Sending request to NewsAPI: {Url}", url);
+                var response = await _httpClient.SendAsync(request);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("NewsAPI Error - Status: {Status}, Body: {Body}", response.StatusCode, errorBody);
+                    return StatusCode((int)response.StatusCode, new { error = "NewsAPI Error", details = errorBody });
+                }
+
+                var newsResponse = await response.Content.ReadFromJsonAsync<NewsApiResponse>();
+
+                if (newsResponse != null && newsResponse.Status == "ok" && newsResponse.Articles != null)
+                {
+                    int processedCount = 0;
+                    foreach (var article in newsResponse.Articles)
+                    {
+                        var dto = new NewsPostDTO
+                        {
+                            Title = article.Title,
+                            Description = article.Description,
+                            Content = article.Content,
+                            Author = article.Author,
+                            Url = article.Url,
+                            UrlToImage = article.UrlToImage,
+                            PublishedAt = article.PublishedAt,
+                            Source = new NewsSourceDTO { Name = article.Source?.Name }
+                        };
+
+                        var result = await _newsService.ProcessAndSaveArticleAsync(dto);
+                        if (result != null) processedCount++;
+                    }
+                    return Ok(new { message = $"Successfully processed {processedCount} articles.", totalFound = newsResponse.Articles.Count });
+                }
+
+                return BadRequest("Failed to fetch news from NewsAPI.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Manual news scrape failed.");
+                return StatusCode(500, new { error = ex.Message });
             }
         }
 

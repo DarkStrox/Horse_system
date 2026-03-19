@@ -7,6 +7,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using System.IO;
+using Microsoft.AspNetCore.Http;
 
 namespace ArabianHorseSystem.Controllers
 {
@@ -28,7 +30,7 @@ namespace ArabianHorseSystem.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto model)
+        public async Task<IActionResult> Register([FromForm] RegisterDto model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -37,17 +39,75 @@ namespace ArabianHorseSystem.Controllers
                 UserName = model.Email,
                 Email = model.Email,
                 FullName = model.FullName,
+                PhoneNumber = model.PhoneNumber,
+                NationalId = model.NationalId,
+                HowDidYouHear = model.HowDidYouHear,
+                Role = model.Role,
                 CreatedAt = DateTime.UtcNow
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded) return BadRequest(result.Errors);
 
-            if (result.Succeeded)
+            // Handle File Uploads and Profile Creation based on Role
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+            if (model.Role == "EquineVet")
             {
-                return Ok(new { message = "Registration successful" });
+                var vet = new EquineVet
+                {
+                    VetId = user.Id,
+                    VeterinaryLicense = model.LicenseNumber,
+                    Ssn = model.NationalId,
+                    CountryCity = model.CountryCity,
+                    ExperienceYears = model.ExperienceYears ?? 0,
+                    VetSpecialization = model.VetSpecialization,
+                    ClinicsWorkedAt = model.ClinicsWorkedAt,
+                    VetBio = model.VetBio,
+                    ConfirmAccuracy = model.ConfirmAccuracy,
+                    LicenseFileUrl = await SaveFile(model.LicenseFile, uploadsFolder),
+                    NationalIdFileUrl = await SaveFile(model.NationalIdFile, uploadsFolder),
+                    CertificatesFileUrl = await SaveFile(model.VetCertificates, uploadsFolder)
+                };
+                user.VetProfile = vet;
+            }
+            else if (model.Role == "Seller")
+            {
+                var seller = new Owner
+                {
+                    OwnerId = user.Id,
+                    SellerType = model.SellerType,
+                    FarmName = model.FarmName,
+                    Address = model.Address,
+                    CommercialRegister = model.CommercialRegister,
+                    ExperienceYears = model.ExperienceYears ?? 0,
+                    SellerRole = model.SellerRole,
+                    NationalIdFileUrl = await SaveFile(model.NationalIdFile, uploadsFolder),
+                    RecommendationLetterUrl = await SaveFile(model.RecommendationLetter, uploadsFolder)
+                };
+                user.OwnerProfile = seller;
+            }
+            else if (model.Role == "Buyer")
+            {
+                // Optionally handle specific Buyer fields if needed, 
+                // but currently nationalId is in the User model.
             }
 
-            return BadRequest(result.Errors);
+            await _userManager.UpdateAsync(user);
+            return Ok(new { message = "Registration successful" });
+        }
+
+        private async Task<string?> SaveFile(IFormFile? file, string folder)
+        {
+            if (file == null) return null;
+            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            var fullPath = Path.Combine(folder, uniqueFileName);
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+            return "/uploads/" + uniqueFileName;
         }
 
         [HttpPost("login")]
@@ -216,6 +276,30 @@ namespace ArabianHorseSystem.Controllers
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public string? NationalId { get; set; }
+        public string? HowDidYouHear { get; set; }
+
+        // Seller Specific
+        public string? SellerType { get; set; }
+        public string? FarmName { get; set; }
+        public string? Address { get; set; }
+        public string? CommercialRegister { get; set; }
+        public int? ExperienceYears { get; set; }
+        public string? SellerRole { get; set; }
+        public IFormFile? NationalIdFile { get; set; }
+        public IFormFile? RecommendationLetter { get; set; }
+
+        // Vet Specific
+        public string? CountryCity { get; set; }
+        public string? LicenseNumber { get; set; }
+        public string? VetSpecialization { get; set; }
+        public string? ClinicsWorkedAt { get; set; }
+        public string? VetBio { get; set; }
+        public bool ConfirmAccuracy { get; set; }
+        public IFormFile? LicenseFile { get; set; }
+        public IFormFile? VetCertificates { get; set; }
     }
 
     public class LoginDto

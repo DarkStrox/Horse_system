@@ -26,90 +26,84 @@ namespace ArabianHorseSystem.Controllers
         {
             try
             {
-                // 1. Run the base ML model prediction first
-                string mlScriptPath = Path.Combine(_env.ContentRootPath, "..", "predict_breed.py");
-                string mlInputJson = JsonSerializer.Serialize(request);
+                if (string.IsNullOrEmpty(request.ImageData))
+                {
+                    return BadRequest(new { error = "Image Data is required.", status = "error" });
+                }
+
+                _logger.LogInformation("PredictBreed: Triggered with new image approach. Image Length={ImageLen}", request.ImageData.Length);
+
+                // Setup the payload to match what python script expects
+                var pyInput = new
+                {
+                    ImageData = request.ImageData
+                };
+
+                string scriptPath = Path.Combine(_env.ContentRootPath, "..", "predict_image.py");
+                string inputJson = JsonSerializer.Serialize(pyInput);
                 
-                string mlOutput = await RunPythonScriptAsync(mlScriptPath, mlInputJson);
-                var mlResponse = SafeDeserialize<BreedPredictionResponse>(mlOutput);
+                string pyOutput = await RunPythonScriptAsync(scriptPath, inputJson);
+                var pyResponse = SafeDeserialize<BreedPredictionResponse>(pyOutput);
 
-                if (mlResponse == null || mlResponse.Status == "error")
+                if (pyResponse == null || pyResponse.Status == "error")
                 {
-                    return BadRequest(new { error = mlResponse?.Error ?? "Base prediction failed.", raw = mlOutput });
+                    _logger.LogError("Prediction script error response. Raw output: {Raw}", pyOutput);
+                    return BadRequest(new { 
+                        error = pyResponse?.Error ?? "Python prediction failed.", 
+                        status = "error"
+                    });
                 }
 
-                // 2. If advanced mode is ON, run Grok for validation and feedback
-                _logger.LogInformation("PredictBreed: IsAdvanced={IsAdvanced}, ImageDataLength={ImageLen}", request.IsAdvanced, request.ImageData?.Length ?? 0);
-                if (request.IsAdvanced && !string.IsNullOrEmpty(request.ImageData))
-                {
-                    try 
-                    {
-                        string grokScriptPath = Path.Combine(_env.ContentRootPath, "..", "grok_predict.py");
-                        var grokInput = new
-                        {
-                            traits = new {
-                                request.Height_cm,
-                                request.Weight_kg,
-                                request.Head_Profile,
-                                request.Tail_Carriage,
-                                request.Neck_Arch,
-                                request.Rib_Count,
-                                request.Back_Length
-                            },
-                            image_data = request.ImageData,
-                            ml_prediction = mlResponse.Breed
-                        };
-
-                        string grokInputJson = JsonSerializer.Serialize(grokInput);
-                        var grokOutput = await RunPythonScriptAsync(grokScriptPath, grokInputJson);
-                        _logger.LogInformation("Grok Output: {GrokOutput}", grokOutput);
-                        
-                        using (var grokDoc = JsonDocument.Parse(ExtractJson(grokOutput)))
-                        {
-                            var root = grokDoc.RootElement;
-                            if (root.TryGetProperty("feedback", out var feedback))
-                            {
-                                mlResponse.AdvancedFeedback = feedback.GetString();
-                            }
-                            
-                            if (root.TryGetProperty("matches", out var matches))
-                            {
-                                mlResponse.Matches = matches.GetBoolean();
-                            }
-                            else if (root.TryGetProperty("error", out var err))
-                            {
-                                mlResponse.AdvancedFeedback = $"Advanced mode error: {err.GetString()}";
-                            }
-                        }
-                    }
-                    catch (Exception grokEx)
-                    {
-                        _logger.LogError(grokEx, "Grok prediction failed");
-                        mlResponse.AdvancedFeedback = $"Advanced mode failed: {grokEx.Message}";
-                    }
-                }
-
-                _logger.LogInformation("Final Response: Breed={Breed}, Feedback={Feedback}", mlResponse.Breed, mlResponse.AdvancedFeedback);
-                return Ok(mlResponse);
+                return Ok(pyResponse);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in PredictBreed");
-                try {
-                    string logPath = Path.Combine(_env.ContentRootPath, "api_error_log.txt");
-                    System.IO.File.AppendAllText(logPath, $"{DateTime.Now}: {ex.Message}\n{ex.StackTrace}\n");
-                } catch {}
+                return StatusCode(500, new { error = "Internal server error.", details = ex.Message });
+            }
+        }
+
+        [HttpPost("predict-strain")]
+        public async Task<IActionResult> PredictStrain([FromBody] StrainPredictionRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("PredictStrain: Triggered for horse strain data prediction.");
+
+                string scriptPath = Path.Combine(_env.ContentRootPath, "..", "predict_strain.py");
+                string inputJson = JsonSerializer.Serialize(request);
+                
+                string pyOutput = await RunPythonScriptAsync(scriptPath, inputJson);
+                var pyResponse = SafeDeserialize<StrainPredictionResponse>(pyOutput);
+
+                if (pyResponse == null || pyResponse.Status == "error")
+                {
+                    _logger.LogError("Strain prediction script error response. Raw output: {Raw}", pyOutput);
+                    return BadRequest(new { 
+                        error = pyResponse?.Error ?? "Python prediction failed.", 
+                        status = "error"
+                    });
+                }
+
+                return Ok(pyResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in PredictStrain");
                 return StatusCode(500, new { error = "Internal server error.", details = ex.Message });
             }
         }
 
         private async Task<string> RunPythonScriptAsync(string scriptPath, string inputJson)
         {
+            string tempInputFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.json");
+            await System.IO.File.WriteAllTextAsync(tempInputFile, inputJson);
+
             var startInfo = new ProcessStartInfo
             {
                 FileName = "python",
-                Arguments = $"\"{scriptPath}\"",
-                RedirectStandardInput = true,
+                Arguments = $"\"{scriptPath}\" \"{tempInputFile}\"",
+                RedirectStandardInput = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -117,22 +111,35 @@ namespace ArabianHorseSystem.Controllers
             };
             startInfo.EnvironmentVariables.Add("PYTHONIOENCODING", "utf-8");
 
-            using (var process = new Process { StartInfo = startInfo })
+            try
             {
-                process.Start();
-                await process.StandardInput.WriteLineAsync(inputJson);
-                process.StandardInput.Close();
-
-                string output = await process.StandardOutput.ReadToEndAsync();
-                string error = await process.StandardError.ReadToEndAsync();
-                await process.WaitForExitAsync();
-
-                if (process.ExitCode != 0 && string.IsNullOrEmpty(output))
+                using (var process = new Process { StartInfo = startInfo })
                 {
-                    throw new Exception($"Python failed (Code {process.ExitCode}): {error}");
-                }
+                    process.Start();
 
-                return output;
+                    string output = await process.StandardOutput.ReadToEndAsync();
+                    string error = await process.StandardError.ReadToEndAsync();
+                    await process.WaitForExitAsync();
+
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        _logger.LogError("Python Error Stream: {Error}", error);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(output) && !string.IsNullOrWhiteSpace(error))
+                    {
+                        return $"{{\"status\": \"error\", \"error\": \"{error.Replace("\"", "\\\"").Replace("\n", " ").Replace("\r", "")}\"}}";
+                    }
+
+                    return output;
+                }
+            }
+            finally
+            {
+                if (System.IO.File.Exists(tempInputFile))
+                {
+                    try { System.IO.File.Delete(tempInputFile); } catch { }
+                }
             }
         }
 
@@ -155,5 +162,33 @@ namespace ArabianHorseSystem.Controllers
             }
             return input;
         }
+    }
+    public class BreedPredictionRequest
+    {
+        public string ImageData { get; set; }
+    }
+
+    public class BreedPredictionResponse
+    {
+        public string Status { get; set; }
+        public string? PredictedClass { get; set; }
+        public double? Confidence { get; set; }
+        public string? Error { get; set; }
+    }
+
+    public class StrainPredictionRequest
+    {
+        public double Height { get; set; }
+        public double Weight { get; set; }
+        public string Gender { get; set; }
+        public string Color { get; set; }
+        public int Age { get; set; }
+    }
+
+    public class StrainPredictionResponse
+    {
+        public string Status { get; set; }
+        public string? PredictedStrain { get; set; }
+        public string? Error { get; set; }
     }
 }
