@@ -33,7 +33,6 @@ namespace ArabianHorseSystem.Data
                     Price = 1500000,
                     IsForSale = true,
                     IsApproved = true,
-                    HealthStatus = "ممتاز",
                     Vaccinated = true,
                     ClaimLocation = "الدوحة، قطر",
                     OwnerId = owner.OwnerId,
@@ -49,7 +48,6 @@ namespace ArabianHorseSystem.Data
                     Price = null,
                     IsForSale = false,
                     IsApproved = true,
-                    HealthStatus = "جيد جدًا",
                     Vaccinated = true,
                     ClaimLocation = "الرياض، السعودية",
                     OwnerId = owner.OwnerId,
@@ -65,7 +63,6 @@ namespace ArabianHorseSystem.Data
                     Price = 850000,
                     IsForSale = true,
                     IsApproved = true,
-                    HealthStatus = "ممتاز",
                     Vaccinated = true,
                     ClaimLocation = "الرياض، السعودية",
                     OwnerId = owner.OwnerId,
@@ -81,7 +78,6 @@ namespace ArabianHorseSystem.Data
                     Price = null,
                     IsForSale = false,
                     IsApproved = true,
-                    HealthStatus = "ممتاز",
                     Vaccinated = false,
                     ClaimLocation = "جدة، السعودية",
                     OwnerId = owner.OwnerId,
@@ -98,6 +94,48 @@ namespace ArabianHorseSystem.Data
             }
 
             await context.SaveChangesAsync();
+        }
+        public static async Task SeedStudsAsync(ApplicationDbContext context)
+        {
+            if (await context.Studs.AnyAsync()) return;
+
+            // 1. Create Location
+            var location = await context.Locations.FirstOrDefaultAsync(l => l.City == "القاهرة");
+            if (location == null)
+            {
+                location = new Location
+                {
+                    Government = "القاهرة",
+                    City = "القاهرة",
+                    Address = "طريق سقارة، الهرم، الجيزة"
+                };
+                context.Locations.Add(location);
+                await context.SaveChangesAsync();
+            }
+
+            // 2. Create Stud
+            var stud = new Stud
+            {
+                NameArabic = "مربط العرب",
+                NameEnglish = "Arab Stud",
+                EstablishedDate = DateTime.SpecifyKind(new DateTime(2010, 1, 1), DateTimeKind.Utc),
+                Description = "مربط متخصص في تربية الخيول العربية الأصيلة من أفضل السلالات.",
+                Email = "info@arabstud.com",
+                FacebookUrl = "https://facebook.com/arabstud",
+                InstagramUrl = "https://instagram.com/arabstud",
+                WebsiteUrl = "https://arabstud.com",
+                LocationId = location.LocationId,
+                ImageUrl = "https://images.unsplash.com/photo-1598974357801-cbca100e65d3?auto=format&fit=crop&q=80&w=500",
+                StudType = "مربط خاص",
+                NumOfHorses = 20,
+                NumOfMales = 8,
+                NumOfFemales = 12
+            };
+
+            context.Studs.Add(stud);
+            await context.SaveChangesAsync();
+            
+            Console.WriteLine("Seeded initial stud: مربط العرب");
         }
     }
 }
