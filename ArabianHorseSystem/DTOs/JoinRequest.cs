@@ -24,5 +24,8 @@ namespace ArabianHorseSystem.DTOs
         public string? NationalId { get; set; } // For ID Card
         public string? LicenseNumber { get; set; } // For Vet/Trainer
         public int? ExperienceYears { get; set; }
+        public string? Specialization { get; set; }
+        public string? PreviousWorkplace { get; set; }
+        public string? HorseExperience { get; set; }
     }
 }

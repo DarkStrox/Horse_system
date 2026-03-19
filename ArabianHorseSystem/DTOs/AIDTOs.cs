@@ -17,8 +17,28 @@ namespace ArabianHorseSystem.DTOs
     {
         public string? Breed { get; set; }
         public string? BreedArabic { get; set; }
-        public string? AdvancedFeedback { get; set; }
-        public bool Matches { get; set; } = true;
+        public double Confidence { get; set; }
+        public string? Status { get; set; }
+        public string? Error { get; set; }
+    }
+
+    public class StrainPredictionRequest
+    {
+        public string? Gender { get; set; }
+        public double Age { get; set; }
+        public double Height_cm { get; set; }
+        public double Weight_kg { get; set; }
+        public string? Body_Format { get; set; }
+        public string? Bone_Density { get; set; }
+        public string? Neck_Length { get; set; }
+        public string? Chest_Width { get; set; }
+    }
+
+    public class StrainPredictionResponse
+    {
+        public string? PredictedStrain { get; set; }
+        public string? PredictedStrainArabic { get; set; }
+        public double Confidence { get; set; }
         public string? Status { get; set; }
         public string? Error { get; set; }
     }
