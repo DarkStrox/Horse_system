@@ -11,6 +11,14 @@ namespace ArabianHorseSystem.Models
 
         public string? Preferences { get; set; } // Map to JSONB in DbContext
         public DateTime Since { get; set; } = DateTime.UtcNow;
+        public string? Address { get; set; }
+        public string? CommercialRegister { get; set; }
+        public int ExperienceYears { get; set; }
+        public string? FarmName { get; set; }
+        public string? NationalIdFileUrl { get; set; }
+        public string? SellerRole { get; set; }
+        public string? SellerType { get; set; }
+        public string? RecommendationLetterUrl { get; set; }
 
         public virtual User User { get; set; } = null!;
         public virtual ICollection<HorseProfile> Horses { get; set; } = new List<HorseProfile>();

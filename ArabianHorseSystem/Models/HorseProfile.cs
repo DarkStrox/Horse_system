@@ -44,6 +44,9 @@ namespace ArabianHorseSystem.Models
         public int? StudId { get; set; }
         public virtual Stud? Stud { get; set; }
 
+        [MaxLength(150)]
+        public string? Breeder { get; set; } 
+
         public int? PedId { get; set; }
         public virtual Pedigree? Pedigree { get; set; }
 
@@ -51,11 +54,14 @@ namespace ArabianHorseSystem.Models
         public decimal? Price { get; set; }
         public bool IsForSale { get; set; } = false;
         public bool IsApproved { get; set; } = false; // Admin approval
-        
-        [MaxLength(50)]
-        public string? HealthStatus { get; set; } // "Healthy", "Injured", etc.
-        
+
+        [MaxLength(255)]
+        public string? HealthReportUrl { get; set; }
+
         public bool Vaccinated { get; set; } = false;
+        
+        [MaxLength(500)]
+        public string? HealthStatus { get; set; }
         
         [MaxLength(255)]
         public string? RacingHistory { get; set; } // "Won 3 races", "No history"

@@ -6,12 +6,14 @@ namespace ArabianHorseSystem.Models
     public class User : IdentityUser<int>
     {
         public string? FullName { get; set; }
-        public string? Role { get; set; } // 'Admin', 'Owner', 'Trainer', 'EquineVet', 'Buyer'
+        public string? Role { get; set; } // 'Admin', 'Owner', 'EquineVet', 'Buyer'
         public string? Bio { get; set; }
         public string? ProfilePictureUrl { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastPasswordChangedAt { get; set; }
-        
+        public string? HowDidYouHear { get; set; }
+        public string? NationalId { get; set; }
+
         // Auction Features
         public bool IsVerifiedBidder { get; set; } = false; // Has paid insurance
 
